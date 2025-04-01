@@ -41,7 +41,6 @@ public class StatsCommand implements Runnable {
 
   @Override
   public void run() {
-    // Parse dates
     if (day != null) {
       fromDate = toDate = parseDate(day, "--day");
     } else if (from != null && to != null) {

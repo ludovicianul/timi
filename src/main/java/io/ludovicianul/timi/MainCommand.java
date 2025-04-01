@@ -5,6 +5,7 @@ import io.ludovicianul.timi.command.AnalyzeCommand;
 import io.ludovicianul.timi.command.ConfigCommand;
 import io.ludovicianul.timi.command.DeleteCommand;
 import io.ludovicianul.timi.command.EditCommand;
+import io.ludovicianul.timi.command.IndexCommand;
 import io.ludovicianul.timi.command.InfoCommand;
 import io.ludovicianul.timi.command.ListCommand;
 import io.ludovicianul.timi.command.NotesCommand;
@@ -32,6 +33,7 @@ import picocli.CommandLine;
       SearchCommand.class,
       AnalyzeCommand.class,
       InfoCommand.class,
+      IndexCommand.class,
       AutoComplete.GenerateCompletion.class
     },
     description = "Time unit tracker for daily activities")
