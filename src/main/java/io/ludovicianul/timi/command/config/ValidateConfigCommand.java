@@ -22,11 +22,11 @@ public class ValidateConfigCommand implements Runnable {
 
     for (TimeEntry entry : entryStore.loadAllEntries(null)) {
       if (configManager.isNotValidActivity(entry.activityType())) {
-        errors.add("Invalid activity type in entry " + entry.id() + ": " + entry.activityType());
+        errors.add("⚠️ Invalid activity type in entry " + entry.id() + ": " + entry.activityType());
       }
       for (String tag : entry.tags()) {
         if (configManager.isNotValidTag(tag)) {
-          errors.add("Invalid tag in entry " + entry.id() + ": " + tag);
+          errors.add("⚠️ Invalid tag in entry " + entry.id() + ": " + tag);
         }
       }
     }
