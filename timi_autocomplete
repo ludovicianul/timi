@@ -165,6 +165,9 @@ function _complete_timi() {
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} analyze" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} info" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} index" ];    then _picocli_timi; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} timeline" ];    then _picocli_timi; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} export" ];    then _picocli_timi; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} batch" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} generate-completion" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} config add-tag" ];    then _picocli_timi_config; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} config add-type" ];    then _picocli_timi_config; return $?; fi
@@ -178,6 +181,8 @@ function _complete_timi() {
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} index rebuild" ];    then _picocli_timi_index; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} index validate" ];    then _picocli_timi_index; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} index show" ];    then _picocli_timi_index; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} batch add" ];    then _picocli_timi_batch; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} batch delete" ];    then _picocli_timi_batch; return $?; fi
 
   # Find the longest sequence of subcommands and call the bash function for that subcommand.
   local cmds0=(add)
@@ -191,33 +196,43 @@ function _complete_timi() {
   local cmds8=(analyze)
   local cmds9=(info)
   local cmds10=(index)
-  local cmds11=(generate-completion)
-  local cmds12=(config add-tag)
-  local cmds13=(config add-type)
-  local cmds14=(config prune)
-  local cmds15=(config remove-type)
-  local cmds16=(config remove-tag)
-  local cmds17=(config show-tags)
-  local cmds18=(config show-types)
-  local cmds19=(config validate)
-  local cmds20=(config list)
-  local cmds21=(index rebuild)
-  local cmds22=(index validate)
-  local cmds23=(index show)
+  local cmds11=(timeline)
+  local cmds12=(export)
+  local cmds13=(batch)
+  local cmds14=(generate-completion)
+  local cmds15=(config add-tag)
+  local cmds16=(config add-type)
+  local cmds17=(config prune)
+  local cmds18=(config remove-type)
+  local cmds19=(config remove-tag)
+  local cmds20=(config show-tags)
+  local cmds21=(config show-types)
+  local cmds22=(config validate)
+  local cmds23=(config list)
+  local cmds24=(index rebuild)
+  local cmds25=(index validate)
+  local cmds26=(index show)
+  local cmds27=(batch add)
+  local cmds28=(batch delete)
 
-  if CompWordsContainsArray "${cmds23[@]}"; then _picocli_timi_index_show; return $?; fi
-  if CompWordsContainsArray "${cmds22[@]}"; then _picocli_timi_index_validate; return $?; fi
-  if CompWordsContainsArray "${cmds21[@]}"; then _picocli_timi_index_rebuild; return $?; fi
-  if CompWordsContainsArray "${cmds20[@]}"; then _picocli_timi_config_list; return $?; fi
-  if CompWordsContainsArray "${cmds19[@]}"; then _picocli_timi_config_validate; return $?; fi
-  if CompWordsContainsArray "${cmds18[@]}"; then _picocli_timi_config_showtypes; return $?; fi
-  if CompWordsContainsArray "${cmds17[@]}"; then _picocli_timi_config_showtags; return $?; fi
-  if CompWordsContainsArray "${cmds16[@]}"; then _picocli_timi_config_removetag; return $?; fi
-  if CompWordsContainsArray "${cmds15[@]}"; then _picocli_timi_config_removetype; return $?; fi
-  if CompWordsContainsArray "${cmds14[@]}"; then _picocli_timi_config_prune; return $?; fi
-  if CompWordsContainsArray "${cmds13[@]}"; then _picocli_timi_config_addtype; return $?; fi
-  if CompWordsContainsArray "${cmds12[@]}"; then _picocli_timi_config_addtag; return $?; fi
-  if CompWordsContainsArray "${cmds11[@]}"; then _picocli_timi_generatecompletion; return $?; fi
+  if CompWordsContainsArray "${cmds28[@]}"; then _picocli_timi_batch_delete; return $?; fi
+  if CompWordsContainsArray "${cmds27[@]}"; then _picocli_timi_batch_add; return $?; fi
+  if CompWordsContainsArray "${cmds26[@]}"; then _picocli_timi_index_show; return $?; fi
+  if CompWordsContainsArray "${cmds25[@]}"; then _picocli_timi_index_validate; return $?; fi
+  if CompWordsContainsArray "${cmds24[@]}"; then _picocli_timi_index_rebuild; return $?; fi
+  if CompWordsContainsArray "${cmds23[@]}"; then _picocli_timi_config_list; return $?; fi
+  if CompWordsContainsArray "${cmds22[@]}"; then _picocli_timi_config_validate; return $?; fi
+  if CompWordsContainsArray "${cmds21[@]}"; then _picocli_timi_config_showtypes; return $?; fi
+  if CompWordsContainsArray "${cmds20[@]}"; then _picocli_timi_config_showtags; return $?; fi
+  if CompWordsContainsArray "${cmds19[@]}"; then _picocli_timi_config_removetag; return $?; fi
+  if CompWordsContainsArray "${cmds18[@]}"; then _picocli_timi_config_removetype; return $?; fi
+  if CompWordsContainsArray "${cmds17[@]}"; then _picocli_timi_config_prune; return $?; fi
+  if CompWordsContainsArray "${cmds16[@]}"; then _picocli_timi_config_addtype; return $?; fi
+  if CompWordsContainsArray "${cmds15[@]}"; then _picocli_timi_config_addtag; return $?; fi
+  if CompWordsContainsArray "${cmds14[@]}"; then _picocli_timi_generatecompletion; return $?; fi
+  if CompWordsContainsArray "${cmds13[@]}"; then _picocli_timi_batch; return $?; fi
+  if CompWordsContainsArray "${cmds12[@]}"; then _picocli_timi_export; return $?; fi
+  if CompWordsContainsArray "${cmds11[@]}"; then _picocli_timi_timeline; return $?; fi
   if CompWordsContainsArray "${cmds10[@]}"; then _picocli_timi_index; return $?; fi
   if CompWordsContainsArray "${cmds9[@]}"; then _picocli_timi_info; return $?; fi
   if CompWordsContainsArray "${cmds8[@]}"; then _picocli_timi_analyze; return $?; fi
@@ -239,7 +254,7 @@ function _picocli_timi() {
   # Get completion data
   local curr_word=${COMP_WORDS[COMP_CWORD]}
 
-  local commands="add config delete edit list stats notes search analyze info index generate-completion"
+  local commands="add config delete edit list stats notes search analyze info index timeline export batch generate-completion"
   local flag_opts="-h --help -V --version"
   local arg_opts=""
 
@@ -316,7 +331,7 @@ function _picocli_timi_delete() {
   local prev_word=${COMP_WORDS[COMP_CWORD-1]}
 
   local commands=""
-  local flag_opts="-h --help -V --version"
+  local flag_opts="--force -h --help -V --version"
   local arg_opts="--id"
 
   type compopt &>/dev/null && compopt +o default
@@ -386,7 +401,7 @@ function _picocli_timi_list() {
 
   local commands=""
   local flag_opts="--show-tags --show-ids -h --help -V --version"
-  local arg_opts="--month -m --from --to --only-tag"
+  local arg_opts="--month -m --from --day --to --only-tag"
 
   type compopt &>/dev/null && compopt +o default
 
@@ -395,6 +410,9 @@ function _picocli_timi_list() {
       return
       ;;
     --from)
+      return
+      ;;
+    --day)
       return
       ;;
     --to)
@@ -579,6 +597,93 @@ function _picocli_timi_index() {
   local curr_word=${COMP_WORDS[COMP_CWORD]}
 
   local commands="rebuild validate show"
+  local flag_opts=""
+  local arg_opts=""
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `timeline` subcommand.
+function _picocli_timi_timeline() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+  local prev_word=${COMP_WORDS[COMP_CWORD-1]}
+
+  local commands=""
+  local flag_opts="-h --help -V --version"
+  local arg_opts="--from --to --view --chart-width"
+  local viewMode_option_args=("day" "week" "month") # --view values
+
+  type compopt &>/dev/null && compopt +o default
+
+  case ${prev_word} in
+    --from)
+      return
+      ;;
+    --to)
+      return
+      ;;
+    --view)
+      local IFS=$'\n'
+      COMPREPLY=( $( compReplyArray "${viewMode_option_args[@]}" ) )
+      return $?
+      ;;
+    --chart-width)
+      return
+      ;;
+  esac
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `export` subcommand.
+function _picocli_timi_export() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+  local prev_word=${COMP_WORDS[COMP_CWORD-1]}
+
+  local commands=""
+  local flag_opts="-h --help -V --version"
+  local arg_opts="--format --output"
+
+  type compopt &>/dev/null && compopt +o default
+
+  case ${prev_word} in
+    --format)
+      return
+      ;;
+    --output)
+      return
+      ;;
+  esac
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `batch` subcommand.
+function _picocli_timi_batch() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+
+  local commands="add delete"
   local flag_opts=""
   local arg_opts=""
 
@@ -851,6 +956,60 @@ function _picocli_timi_index_show() {
   local commands=""
   local flag_opts=""
   local arg_opts=""
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `add` subcommand.
+function _picocli_timi_batch_add() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+  local prev_word=${COMP_WORDS[COMP_CWORD-1]}
+
+  local commands=""
+  local flag_opts=""
+  local arg_opts="--file"
+
+  type compopt &>/dev/null && compopt +o default
+
+  case ${prev_word} in
+    --file)
+      return
+      ;;
+  esac
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `delete` subcommand.
+function _picocli_timi_batch_delete() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+  local prev_word=${COMP_WORDS[COMP_CWORD-1]}
+
+  local commands=""
+  local flag_opts=""
+  local arg_opts="--file"
+
+  type compopt &>/dev/null && compopt +o default
+
+  case ${prev_word} in
+    --file)
+      return
+      ;;
+  esac
 
   if [[ "${curr_word}" == -* ]]; then
     COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
