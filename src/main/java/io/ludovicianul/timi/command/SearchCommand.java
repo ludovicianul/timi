@@ -1,5 +1,7 @@
 package io.ludovicianul.timi.command;
 
+import static io.ludovicianul.timi.util.Utils.formatMinutes;
+
 import io.ludovicianul.timi.persistence.EntryStore;
 import io.ludovicianul.timi.persistence.TimeEntry;
 import jakarta.inject.Inject;
@@ -20,9 +22,7 @@ public class SearchCommand implements Runnable {
   @Option(names = "--tag", description = "Search by tag (case-insensitive, substring)")
   String tag;
 
-  @Option(
-      names = "--activity",
-      description = "Search by activity type (case-insensitive, substring)")
+  @Option(names = "--type", description = "Search by activity type (case-insensitive, substring)")
   String activity;
 
   @Option(names = "--note", description = "Search by note content (case-insensitive, substring)")
@@ -122,9 +122,5 @@ public class SearchCommand implements Runnable {
     } catch (DateTimeParseException e) {
       throw new IllegalArgumentException("❌ Invalid date for " + label + ". Use yyyy-MM-dd.");
     }
-  }
-
-  private String formatMinutes(int minutes) {
-    return String.format("%dh %02dm", minutes / 60, minutes % 60);
   }
 }
