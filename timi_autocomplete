@@ -275,7 +275,7 @@ function _picocli_timi_add() {
 
   local commands=""
   local flag_opts="--interactive -i -h --help -V --version"
-  local arg_opts="--start -s --duration -d --type -t --tags --note -n"
+  local arg_opts="--start -s --duration -d --type -t --tags --tag --note -n"
 
   type compopt &>/dev/null && compopt +o default
 
@@ -289,7 +289,7 @@ function _picocli_timi_add() {
     --type|-t)
       return
       ;;
-    --tags)
+    --tags|--tag)
       return
       ;;
     --note|-n)
@@ -331,13 +331,13 @@ function _picocli_timi_delete() {
   local prev_word=${COMP_WORDS[COMP_CWORD-1]}
 
   local commands=""
-  local flag_opts="--force -h --help -V --version"
-  local arg_opts="--id"
+  local flag_opts="--force -f -h --help -V --version"
+  local arg_opts="--id -i"
 
   type compopt &>/dev/null && compopt +o default
 
   case ${prev_word} in
-    --id)
+    --id|-i)
       return
       ;;
   esac
@@ -359,7 +359,7 @@ function _picocli_timi_edit() {
 
   local commands=""
   local flag_opts="--interactive -h --help -V --version"
-  local arg_opts="--id -i --start -s --duration -d --note -n --type -t --tags"
+  local arg_opts="--id -i --start -s --duration -d --note -n --type -t --tags -tag"
 
   type compopt &>/dev/null && compopt +o default
 
@@ -379,7 +379,7 @@ function _picocli_timi_edit() {
     --type|-t)
       return
       ;;
-    --tags)
+    --tags|-tag)
       return
       ;;
   esac
@@ -400,8 +400,9 @@ function _picocli_timi_list() {
   local prev_word=${COMP_WORDS[COMP_CWORD-1]}
 
   local commands=""
-  local flag_opts="--show-tags --show-ids -h --help -V --version"
-  local arg_opts="--month -m --from --day --to --only-tag"
+  local flag_opts="--today --show-tags --show-ids -h --help -V --version"
+  local arg_opts="--month -m --from --day --to --only-tag --count-mode"
+  local countMode_option_args=("full" "split") # --count-mode values
 
   type compopt &>/dev/null && compopt +o default
 
@@ -420,6 +421,11 @@ function _picocli_timi_list() {
       ;;
     --only-tag)
       return
+      ;;
+    --count-mode)
+      local IFS=$'\n'
+      COMPREPLY=( $( compReplyArray "${countMode_option_args[@]}" ) )
+      return $?
       ;;
   esac
 
@@ -440,8 +446,9 @@ function _picocli_timi_stats() {
 
   local commands=""
   local flag_opts="--daily-breakdown -h --help -V --version"
-  local arg_opts="--group-by --day --from --to"
+  local arg_opts="--group-by --count-mode --day --from --to"
   local groupBy_option_args=("type" "tag") # --group-by values
+  local countMode_option_args=("full" "split") # --count-mode values
 
   type compopt &>/dev/null && compopt +o default
 
@@ -449,6 +456,11 @@ function _picocli_timi_stats() {
     --group-by)
       local IFS=$'\n'
       COMPREPLY=( $( compReplyArray "${groupBy_option_args[@]}" ) )
+      return $?
+      ;;
+    --count-mode)
+      local IFS=$'\n'
+      COMPREPLY=( $( compReplyArray "${countMode_option_args[@]}" ) )
       return $?
       ;;
     --day)
@@ -512,7 +524,7 @@ function _picocli_timi_search() {
 
   local commands=""
   local flag_opts="--summary -h --help -V --version"
-  local arg_opts="--tag --activity --note --from --to"
+  local arg_opts="--tag --type --note --from --to"
 
   type compopt &>/dev/null && compopt +o default
 
@@ -520,7 +532,7 @@ function _picocli_timi_search() {
     --tag)
       return
       ;;
-    --activity)
+    --type)
       return
       ;;
     --note)
@@ -552,12 +564,15 @@ function _picocli_timi_analyze() {
   local commands=""
   local flag_opts="--context-switch --peak --focus-score --dow-insights -h --help -V --version"
   local arg_opts="--by --target"
+  local by_option_args=("day" "week") # --by values
 
   type compopt &>/dev/null && compopt +o default
 
   case ${prev_word} in
     --by)
-      return
+      local IFS=$'\n'
+      COMPREPLY=( $( compReplyArray "${by_option_args[@]}" ) )
+      return $?
       ;;
     --target)
       return
@@ -656,15 +671,30 @@ function _picocli_timi_export() {
 
   local commands=""
   local flag_opts="-h --help -V --version"
-  local arg_opts="--format --output"
+  local arg_opts="--format -f --from --to --type -t --tags --tag --output -o"
+  local format_option_args=("csv" "json") # --format values
 
   type compopt &>/dev/null && compopt +o default
 
   case ${prev_word} in
-    --format)
+    --format|-f)
+      local IFS=$'\n'
+      COMPREPLY=( $( compReplyArray "${format_option_args[@]}" ) )
+      return $?
+      ;;
+    --from)
       return
       ;;
-    --output)
+    --to)
+      return
+      ;;
+    --type|-t)
+      return
+      ;;
+    --tags|--tag)
+      return
+      ;;
+    --output|-o)
       return
       ;;
   esac
@@ -794,12 +824,12 @@ function _picocli_timi_config_removetype() {
 
   local commands=""
   local flag_opts="-h --help -V --version"
-  local arg_opts="--name"
+  local arg_opts="--name -n"
 
   type compopt &>/dev/null && compopt +o default
 
   case ${prev_word} in
-    --name)
+    --name|-n)
       return
       ;;
   esac
@@ -821,12 +851,12 @@ function _picocli_timi_config_removetag() {
 
   local commands=""
   local flag_opts="-h --help -V --version"
-  local arg_opts="--name"
+  local arg_opts="--name -n"
 
   type compopt &>/dev/null && compopt +o default
 
   case ${prev_word} in
-    --name)
+    --name|-n)
       return
       ;;
   esac
