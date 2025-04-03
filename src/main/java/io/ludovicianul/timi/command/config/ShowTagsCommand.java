@@ -13,7 +13,7 @@ public class ShowTagsCommand implements Runnable {
 
   @Override
   public void run() {
-    System.out.println("Configured tags:");
+    System.out.println("🏷  Configured tags:");
     configManager.getTags().forEach(tag -> System.out.println("• " + tag));
   }
 }
