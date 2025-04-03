@@ -1,5 +1,7 @@
 package io.ludovicianul.timi.command;
 
+import static io.ludovicianul.timi.util.Utils.*;
+
 import io.ludovicianul.timi.config.ConfigManager;
 import io.ludovicianul.timi.git.GitManager;
 import io.ludovicianul.timi.persistence.EntryStore;
@@ -41,9 +43,10 @@ public class AddCommand implements Runnable {
   private String activityType;
 
   @CommandLine.Option(
-      names = "--tags",
-      description = "Comma-separated list of tags (case-insensitive).")
-  private String tagsStr;
+      names = {"--tags", "--tag"},
+      description = "Comma-separated list of tags (case-insensitive).",
+      split = ",")
+  private List<String> tags;
 
   @CommandLine.Option(
       names = {"--note", "-n"},
@@ -55,12 +58,6 @@ public class AddCommand implements Runnable {
       description = "Enable interactive mode to prompt for missing fields.")
   private boolean interactive;
 
-  private static final List<DateTimeFormatter> SUPPORTED_FORMATTERS =
-      Arrays.asList(
-          DateTimeFormatter.ISO_LOCAL_DATE_TIME,
-          DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
-          DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-
   private static class InputData {
     LocalDateTime startTime;
     Integer durationMinutes;
@@ -71,134 +68,108 @@ public class AddCommand implements Runnable {
 
   @Override
   public void run() {
-    if (!interactive) {
-      List<String> missingOptions = new ArrayList<>();
-      if (this.duration == null) {
-        missingOptions.add("--duration (-d)");
-      }
-      if (this.activityType == null || this.activityType.trim().isEmpty()) {
-        missingOptions.add("--type (-t)");
+    try (Scanner scanner = new Scanner(System.in)) {
+      if (!interactive) {
+        List<String> missingOptions = new ArrayList<>();
+        if (this.duration == null) missingOptions.add("--duration (-d)");
+        if (this.activityType == null || this.activityType.trim().isEmpty())
+          missingOptions.add("--type (-t)");
+
+        if (!missingOptions.isEmpty()) {
+          System.err.println("❌ Missing options: " + String.join(", ", missingOptions));
+          System.err.println("Use --interactive or provide these options explicitly.");
+          return;
+        }
       }
 
-      if (!missingOptions.isEmpty()) {
-        System.err.println(
-            "❌ Missing required options in non-interactive mode: "
-                + String.join(", ", missingOptions));
-        System.err.println("   Provide these options or use the --interactive flag.");
+      InputData inputs = gatherInputs(scanner);
+      if (inputs == null || !validateInputs(inputs)) {
         return;
       }
-    }
 
-    InputData inputs = gatherInputs();
-    if (inputs == null) {
-      return;
-    }
+      if (interactive && !confirmInputs(scanner, inputs)) {
+        System.out.println("❌ Entry addition cancelled.");
+        return;
+      }
 
-    if (!validateInputs(inputs)) {
-      return;
+      createAndSaveEntry(inputs);
+    } catch (Exception e) {
+      System.err.println("❌ Unexpected error: " + e.getMessage());
     }
-
-    createAndSaveEntry(inputs);
   }
 
-  /**
-   * Gathers inputs from command-line args and potentially interactive prompts. Assumes required
-   * fields for non-interactive mode have been validated *before* calling this. Returns InputData or
-   * null if interactive mode fails or explicit args are invalid.
-   */
-  private InputData gatherInputs() {
-    InputData data = new InputData();
+  private boolean confirmInputs(Scanner scanner, InputData inputs) {
+    System.out.println("\nPlease confirm entry details:");
+    System.out.printf(
+        "• Start Time: %s%n", inputs.startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+    System.out.printf("• Duration: %d minutes%n", inputs.durationMinutes);
+    System.out.printf("• Activity Type: %s%n", inputs.type);
+    System.out.printf(
+        "• Tags: %s%n", inputs.tags.isEmpty() ? "<none>" : String.join(", ", inputs.tags));
+    System.out.printf("• Note: %s%n", inputs.note.isEmpty() ? "<empty>" : inputs.note);
 
+    System.out.print("\nConfirm addition? (y/N): ");
+    String confirm = scanner.nextLine().trim().toLowerCase();
+    return confirm.equals("y");
+  }
+
+  private InputData gatherInputs(Scanner scanner) {
+    InputData data = new InputData();
     data.durationMinutes = this.duration;
     data.type = this.activityType;
     data.note = (this.note != null) ? this.note : "";
 
     if (this.startStr != null) {
-      Optional<LocalDateTime> parsedTime = parseDateTime(this.startStr);
-      if (parsedTime.isPresent()) {
-        data.startTime = parsedTime.get();
-      } else {
-        System.err.printf(
-            "❌ Invalid format provided for --start: '%s'. Aborting.%n", this.startStr);
+      try {
+        data.startTime = parseDateTime(this.startStr);
+      } catch (DateTimeParseException e) {
+        System.err.printf("❌ Invalid format for --start: '%s'.%n", this.startStr);
         return null;
       }
     }
 
-    if (this.tagsStr != null) {
-      data.tags = parseTags(this.tagsStr);
+    if (this.tags != null) {
+      data.tags = tags.stream().map(String::toLowerCase).collect(Collectors.toSet());
     }
 
     if (interactive) {
-      try (Scanner scanner = new Scanner(System.in)) {
-        System.out.println("\n--- Interactive Entry Addition ---\n");
+      System.out.println("\n--- Interactive Entry Addition ---\n");
 
-        if (data.startTime == null) {
-          data.startTime = promptForDateTime(scanner);
-        } else {
-          System.out.printf(
-              "Using provided start time: %s%n",
-              data.startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        }
+      if (data.startTime == null) data.startTime = promptForDateTime(scanner);
+      else System.out.printf("Using provided start time: %s%n", data.startTime);
 
-        if (data.durationMinutes == null) {
-          data.durationMinutes = promptForInteger(scanner);
-        } else {
-          System.out.printf("Using provided duration: %d minutes%n", data.durationMinutes);
-        }
+      if (data.durationMinutes == null) data.durationMinutes = promptForInteger(scanner);
+      else System.out.printf("Using provided duration: %d minutes%n", data.durationMinutes);
 
-        if (data.type == null || data.type.trim().isEmpty()) {
-          data.type =
-              promptForString(
-                  scanner,
-                  String.format("Activity type (options: %s)", configManager.getActivityTypes()),
-                  s -> configManager.isNotValidActivity(s));
-        } else {
-          System.out.printf("Using provided activity type: %s%n", data.type);
-        }
+      if (data.type == null || data.type.trim().isEmpty())
+        data.type =
+            promptForString(
+                scanner,
+                String.format("Activity type (options: %s)", configManager.getActivityTypes()),
+                configManager::isNotValidActivity);
+      else System.out.printf("Using provided activity type: %s%n", data.type);
 
-        if (this.tagsStr == null) {
-          data.tags =
-              promptForTags(
-                  scanner,
-                  String.format("Tags (comma-separated, options: %s)", configManager.getTags()));
-        } else {
-          System.out.printf(
-              "Using provided tags: %s%n",
-              data.tags.isEmpty() ? "<none>" : String.join(",", data.tags));
-        }
+      if (this.tags == null)
+        data.tags =
+            promptForTags(scanner, String.format("Tags (options: %s)", configManager.getTags()));
+      else
+        System.out.printf(
+            "Using provided tags: %s%n",
+            data.tags.isEmpty() ? "<none>" : String.join(",", data.tags));
 
-        if (this.note == null) {
-          data.note = promptForString(scanner, "Note", s -> configManager.isNotValidTag(s));
-        } else {
-          System.out.printf(
-              "Using provided note: %s%n", data.note.isEmpty() ? "<empty>" : data.note);
-        }
+      if (this.note == null) data.note = promptForString(scanner, "Note", s -> false);
+      else
+        System.out.printf("Using provided note: %s%n", data.note.isEmpty() ? "<empty>" : data.note);
 
-      } catch (NoSuchElementException e) {
-        System.err.println("\n❌ Input stream closed unexpectedly. Aborting add.");
-        return null;
-      } catch (Exception e) {
-        System.err.println(
-            "\n❌ An unexpected error occurred during interactive input: " + e.getMessage());
-        return null;
-      }
     } else {
-      if (data.startTime == null) {
-        data.startTime = LocalDateTime.now();
-      }
+      if (data.startTime == null) data.startTime = LocalDateTime.now();
     }
 
-    if (data.type != null) {
-      data.type = data.type.toLowerCase(Locale.ROOT);
-    }
+    if (data.type != null) data.type = data.type.toLowerCase(Locale.ROOT);
 
     return data;
   }
 
-  /**
-   * Validates the gathered inputs against business rules (ConfigManager, etc.). Returns true if
-   * valid, false otherwise.
-   */
   private boolean validateInputs(InputData data) {
     if (data.startTime == null) {
       return false;
@@ -209,30 +180,25 @@ public class AddCommand implements Runnable {
     if (data.type == null || data.type.trim().isEmpty()) {
       return false;
     }
-
     if (data.durationMinutes <= 0) {
       System.err.println("❌ Duration must be a positive number of minutes.");
       return false;
     }
-
     if (configManager.isNotValidActivity(data.type)) {
       System.err.printf(
           "❌ Invalid activity type: '%s'. Allowed: %s%n",
           data.type, configManager.getActivityTypes());
       return false;
     }
-
     for (String tag : data.tags) {
       if (configManager.isNotValidTag(tag)) {
         System.err.printf("❌ Invalid tag: '%s'. Allowed: %s%n", tag, configManager.getTags());
         return false;
       }
     }
-
     return true;
   }
 
-  /** Creates the TimeEntry object, saves it, and commits. */
   private void createAndSaveEntry(InputData data) {
     TimeEntry entry =
         new TimeEntry(
@@ -244,7 +210,7 @@ public class AddCommand implements Runnable {
             data.tags);
 
     System.out.printf(
-        "Adding entry: Start=%s, Duration=%d, Type=%s, Tags=%s, Note='%s'%n",
+        "\nAdding entry: Start=%s, Duration=%d, Type=%s, Tags=%s, Note='%s'%n",
         entry.startTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
         entry.durationMinutes(),
         entry.activityType(),
@@ -265,20 +231,6 @@ public class AddCommand implements Runnable {
     }
   }
 
-  private Optional<LocalDateTime> parseDateTime(String dateTimeStr) {
-    if (dateTimeStr == null || dateTimeStr.trim().isEmpty()) {
-      return Optional.of(LocalDateTime.now());
-    }
-    for (DateTimeFormatter formatter : SUPPORTED_FORMATTERS) {
-      try {
-        return Optional.of(LocalDateTime.parse(dateTimeStr.trim(), formatter));
-      } catch (DateTimeParseException e) {
-        /* Try next */
-      }
-    }
-    return Optional.empty();
-  }
-
   private Set<String> parseTags(String tagsInput) {
     if (tagsInput == null || tagsInput.trim().isEmpty()) {
       return Collections.emptySet();
@@ -295,13 +247,13 @@ public class AddCommand implements Runnable {
       String defaultStr = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
       System.out.printf("%s [%s]: ", "Start time (yyyy-MM-ddTHH:mm, default now)", defaultStr);
       String input = scanner.nextLine().trim();
-      Optional<LocalDateTime> parsed = parseDateTime(input);
-      if (parsed.isPresent()) {
-        return parsed.get();
-      } else if (!input.isEmpty()) {
+      if (input.isEmpty()) {
+        return LocalDateTime.now();
+      }
+      try {
+        return parseDateTime(input);
+      } catch (DateTimeParseException e) {
         System.out.println("⚠️ Invalid date/time format. Try again.");
-      } else {
-        System.out.println("⚠️ This field is required. Try again.");
       }
     }
   }
@@ -319,7 +271,7 @@ public class AddCommand implements Runnable {
   }
 
   private String promptForString(Scanner scanner, String prompt, Predicate<String> validator) {
-    do {
+    while (true) {
       System.out.printf("%s [required]: ", prompt);
       String input = scanner.nextLine().trim();
       if (input.isEmpty()) {
@@ -329,12 +281,25 @@ public class AddCommand implements Runnable {
       } else {
         return input;
       }
-    } while (true);
+    }
   }
 
   private Set<String> promptForTags(Scanner scanner, String prompt) {
-    System.out.printf("%s [%s]: ", prompt, "<empty>");
-    String input = scanner.nextLine().trim();
-    return input.isEmpty() ? Collections.emptySet() : parseTags(input);
+    while (true) {
+      System.out.printf("%s [%s]: ", prompt, "<empty>");
+      String input = scanner.nextLine().trim();
+      if (input.isEmpty()) {
+        return Collections.emptySet();
+      }
+      Set<String> inputTags = parseTags(input);
+      Set<String> difference = new HashSet<>(inputTags);
+      difference.removeAll(configManager.getTags());
+      if (difference.isEmpty()) {
+        return inputTags;
+      } else {
+        System.err.printf(
+            "❌ Invalid tag(s): '%s'. Allowed: %s%n", difference, configManager.getTags());
+      }
+    }
   }
 }
