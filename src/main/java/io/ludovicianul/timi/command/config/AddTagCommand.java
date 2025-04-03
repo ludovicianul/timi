@@ -24,9 +24,9 @@ public class AddTagCommand implements Runnable {
     String normalizedName = name.toLowerCase(Locale.ROOT);
     boolean added = configManager.addTag(normalizedName);
     if (added) {
-      System.out.println("✅ Tag added: " + normalizedName);
+      System.out.println("\n✅ Tag added: " + normalizedName);
     } else {
-      System.out.println("⚠️ Tag already exists: " + normalizedName);
+      System.out.println("\n⚠️ Tag already exists: " + normalizedName);
     }
   }
 }

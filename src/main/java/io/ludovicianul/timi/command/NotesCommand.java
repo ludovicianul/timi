@@ -37,7 +37,7 @@ public class NotesCommand implements Runnable {
     Predicate<LocalDate> dateFilter = buildDateFilter();
 
     if (dateFilter == null) {
-      System.out.println("❌ Invalid date format. Use yyyy-MM-dd for day or yyyy-MM for month.");
+      System.out.println("\n❌ Invalid date format. Use yyyy-MM-dd for day or yyyy-MM for month.");
       return;
     }
 
@@ -50,13 +50,13 @@ public class NotesCommand implements Runnable {
 
     if (entries.isEmpty()) {
       System.out.printf(
-          "📭 No notes found for tag '%s'%s%n",
+          "\n📭 No notes found for tag '%s'%s%n",
           normalizedTag, (day != null ? " on " + day : (month != null ? " in " + month : "")));
       return;
     }
 
     System.out.printf(
-        "📝 Notes for tag '%s'%s:%n%n",
+        "\n📝 Notes for tag '%s'%s:%n%n",
         normalizedTag, (day != null ? " on " + day : (month != null ? " in " + month : "")));
 
     for (TimeEntry e : entries) {

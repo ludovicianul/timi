@@ -32,9 +32,9 @@ public class ValidateConfigCommand implements Runnable {
     }
 
     if (errors.isEmpty()) {
-      System.out.println("✅ All entries are valid.");
+      System.out.println("\n✅ All entries are valid.");
     } else {
-      System.out.println("❌ Found " + errors.size() + " invalid entries:");
+      System.out.println("\n❌ Found " + errors.size() + " invalid entries:");
       errors.forEach(System.out::println);
     }
   }

@@ -15,7 +15,7 @@ import picocli.CommandLine;
 public class IndexCommand implements Runnable {
   @Override
   public void run() {
-    System.out.println("Use one of the subcommands: rebuild, validate, show");
+    System.out.println("\nUse one of the subcommands: rebuild, validate, show");
   }
 
   @CommandLine.Command(name = "rebuild", description = "Rebuild the index from scratch")
@@ -25,7 +25,7 @@ public class IndexCommand implements Runnable {
     @Override
     public void run() {
       int indexed = entryStore.indexRebuild();
-      System.out.printf("✅ Index rebuilt with %d entries.%n", indexed);
+      System.out.printf("\n✅ Index rebuilt with %d entries.%n", indexed);
     }
   }
 
@@ -37,9 +37,9 @@ public class IndexCommand implements Runnable {
     public void run() {
       var issues = entryStore.validateIndex();
       if (issues.isEmpty()) {
-        System.out.println("✅ Index is consistent with stored entries.");
+        System.out.println("\n✅ Index is consistent with stored entries.");
       } else {
-        System.out.printf("❌ Found %d issue(s):%n", issues.size());
+        System.out.printf("\n❌ Found %d issue(s):%n", issues.size());
         issues.forEach(System.out::println);
       }
     }

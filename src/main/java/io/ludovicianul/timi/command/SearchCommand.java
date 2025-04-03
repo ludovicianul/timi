@@ -45,12 +45,12 @@ public class SearchCommand implements Runnable {
   @Override
   public void run() {
     if (tag == null && activity == null && note == null) {
-      System.out.println("❌ Please provide at least one of: --tag, --activity, or --note");
+      System.out.println("\n❌ Please provide at least one of: --tag, --activity, or --note");
       return;
     }
 
     if ((from != null && to == null) || (from == null && to != null)) {
-      System.out.println("❌ Please provide both --from and --to for date filtering.");
+      System.out.println("\n❌ Please provide both --from and --to for date filtering.");
       return;
     }
 
@@ -58,7 +58,7 @@ public class SearchCommand implements Runnable {
       fromDate = parseDate(from, "--from");
       toDate = parseDate(to, "--to");
       if (fromDate.isAfter(toDate)) {
-        System.out.println("❌ Invalid date range: --from must be before or equal to --to.");
+        System.out.println("\n❌ Invalid date range: --from must be before or equal to --to.");
         return;
       }
     }
@@ -90,7 +90,7 @@ public class SearchCommand implements Runnable {
             .toList();
 
     if (matches.isEmpty()) {
-      System.out.println("📭 No entries matched your search.");
+      System.out.println("\n📭 No entries matched your search.");
       return;
     }
 
@@ -98,13 +98,13 @@ public class SearchCommand implements Runnable {
 
     if (summaryOnly) {
       System.out.printf(
-          "📊 Total time for matching entries: %s (%d entr%s)%n",
+          "\n📊 Total time for matching entries: %s (%d entr%s)%n",
           formatMinutes(totalMinutes), matches.size(), matches.size() == 1 ? "y" : "ies");
       return;
     }
 
     System.out.printf(
-        "🔎 Found %d matching entr%s:%n%n", matches.size(), matches.size() == 1 ? "y" : "ies");
+        "\n🔎 Found %d matching entr%s:%n%n", matches.size(), matches.size() == 1 ? "y" : "ies");
 
     for (TimeEntry e : matches) {
       String time = e.startTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));

@@ -13,7 +13,7 @@ public class ListConfigCommand implements Runnable {
 
   @Override
   public void run() {
-    System.out.println("📂 Configured Activity Types:");
+    System.out.println("\n📂 Configured Activity Types:");
     configManager.getActivityTypes().forEach(type -> System.out.println("  • " + type));
 
     System.out.println("\n🏷  Configured Tags:");

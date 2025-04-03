@@ -24,9 +24,9 @@ public class RemoveTagCommand implements Runnable {
     String normalizedName = name.toLowerCase(Locale.ROOT);
     boolean removed = configManager.removeTag(normalizedName);
     if (removed) {
-      System.out.println("✅ Tag removed: " + normalizedName);
+      System.out.println("\n✅ Tag removed: " + normalizedName);
     } else {
-      System.out.println("⚠️ Tag not found: " + normalizedName);
+      System.out.println("\n⚠️ Tag not found: " + normalizedName);
     }
   }
 }

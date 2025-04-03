@@ -61,6 +61,7 @@ public class ExportCommand implements Runnable {
 
   @Override
   public void run() {
+    System.out.println(" ");
     List<TimeEntry> entries = entryStore.loadAllEntries(null);
     if (entries.isEmpty()) {
       System.out.println("📭 No entries to export.");

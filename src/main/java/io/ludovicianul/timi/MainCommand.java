@@ -2,15 +2,18 @@ package io.ludovicianul.timi;
 
 import io.ludovicianul.timi.command.AddCommand;
 import io.ludovicianul.timi.command.AnalyzeCommand;
+import io.ludovicianul.timi.command.BatchCommand;
 import io.ludovicianul.timi.command.ConfigCommand;
 import io.ludovicianul.timi.command.DeleteCommand;
 import io.ludovicianul.timi.command.EditCommand;
+import io.ludovicianul.timi.command.ExportCommand;
 import io.ludovicianul.timi.command.IndexCommand;
 import io.ludovicianul.timi.command.InfoCommand;
 import io.ludovicianul.timi.command.ListCommand;
 import io.ludovicianul.timi.command.NotesCommand;
 import io.ludovicianul.timi.command.SearchCommand;
 import io.ludovicianul.timi.command.StatsCommand;
+import io.ludovicianul.timi.command.TimelineCommand;
 import io.ludovicianul.timi.version.VersionProvider;
 import io.quarkus.picocli.runtime.annotations.TopCommand;
 import org.slf4j.Logger;
@@ -34,6 +37,9 @@ import picocli.CommandLine;
       AnalyzeCommand.class,
       InfoCommand.class,
       IndexCommand.class,
+      TimelineCommand.class,
+      ExportCommand.class,
+      BatchCommand.class,
       AutoComplete.GenerateCompletion.class
     },
     description = "Time unit tracker for daily activities")

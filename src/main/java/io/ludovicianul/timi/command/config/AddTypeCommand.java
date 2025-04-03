@@ -25,9 +25,9 @@ public class AddTypeCommand implements Runnable {
 
     boolean added = configManager.addActivityType(normalizedName);
     if (added) {
-      System.out.println("✅ Activity type added: " + normalizedName);
+      System.out.println("\n✅ Activity type added: " + normalizedName);
     } else {
-      System.out.println("⚠️ Activity type already exists: " + normalizedName);
+      System.out.println("\n⚠️ Activity type already exists: " + normalizedName);
     }
   }
 }

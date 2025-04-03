@@ -62,6 +62,7 @@ public class ListCommand implements Runnable {
 
   @Override
   public void run() {
+    System.out.println(" ");
     List<TimeEntry> entries =
         entryStore.loadAllEntries(month).stream()
             .sorted(Comparator.comparing(TimeEntry::startTime))
@@ -95,7 +96,7 @@ public class ListCommand implements Runnable {
 
         String totalFormatted = String.format("%dh %02dm", totalMinutes / 60, totalMinutes % 60);
         System.out.printf("📅 %s (Total: %s)%n", entryDate, totalFormatted);
-        System.out.println("-".repeat(60));
+        System.out.println("-".repeat(30));
         lastDate = entryDate;
       }
 

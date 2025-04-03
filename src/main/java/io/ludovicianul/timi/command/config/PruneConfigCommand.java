@@ -34,14 +34,14 @@ public class PruneConfigCommand implements Runnable {
         configManager.getActivityTypes().stream().filter(t -> !usedTypes.contains(t)).toList();
 
     if (unusedTags.isEmpty() && unusedTypes.isEmpty()) {
-      System.out.println("✅ No unused tags or activity types found.");
+      System.out.println("\n✅ No unused tags or activity types found.");
       return;
     }
 
     unusedTags.forEach(configManager::removeTag);
     unusedTypes.forEach(configManager::removeActivityType);
 
-    System.out.println("🧹 Pruned unused tags and activity types:");
+    System.out.println("\n🧹 Pruned unused tags and activity types:");
     unusedTags.forEach(tag -> System.out.println("  - Removed tag: " + tag));
     unusedTypes.forEach(type -> System.out.println("  - Removed type: " + type));
   }

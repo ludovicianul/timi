@@ -13,7 +13,7 @@ public class ShowTypesCommand implements Runnable {
 
   @Override
   public void run() {
-    System.out.println("📂 Configured activity types:");
+    System.out.println("\n📂 Configured activity types:");
     configManager.getActivityTypes().forEach(type -> System.out.println("• " + type));
   }
 }

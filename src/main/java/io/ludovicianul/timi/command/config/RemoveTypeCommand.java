@@ -25,9 +25,9 @@ public class RemoveTypeCommand implements Runnable {
 
     boolean removed = configManager.removeActivityType(normalizedName);
     if (removed) {
-      System.out.println("✅ Activity type removed: " + normalizedName);
+      System.out.println("\n✅ Activity type removed: " + normalizedName);
     } else {
-      System.out.println("⚠️ Activity type not found: " + normalizedName);
+      System.out.println("\n⚠️ Activity type not found: " + normalizedName);
     }
   }
 }
