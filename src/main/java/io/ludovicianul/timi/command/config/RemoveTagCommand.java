@@ -11,7 +11,10 @@ import picocli.CommandLine;
     mixinStandardHelpOptions = true)
 public class RemoveTagCommand implements Runnable {
 
-  @CommandLine.Option(names = "--name", required = true, description = "Tag to remove")
+  @CommandLine.Option(
+      names = {"--name", "-n"},
+      required = true,
+      description = "Tag to remove")
   String name;
 
   @Inject ConfigManager configManager;

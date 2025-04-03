@@ -11,7 +11,10 @@ import picocli.CommandLine;
     mixinStandardHelpOptions = true)
 public class RemoveTypeCommand implements Runnable {
 
-  @CommandLine.Option(names = "--name", required = true, description = "Activity type to remove")
+  @CommandLine.Option(
+      names = {"--name", "-n"},
+      required = true,
+      description = "Activity type to remove")
   String name;
 
   @Inject ConfigManager configManager;
