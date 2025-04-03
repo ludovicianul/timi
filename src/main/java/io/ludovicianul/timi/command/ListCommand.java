@@ -1,11 +1,12 @@
 package io.ludovicianul.timi.command;
 
+import static io.ludovicianul.timi.util.Utils.formatMinutes;
+
 import io.ludovicianul.timi.persistence.EntryStore;
 import io.ludovicianul.timi.persistence.TimeEntry;
 import jakarta.inject.Inject;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 import picocli.CommandLine;
@@ -16,16 +17,27 @@ import picocli.CommandLine;
     mixinStandardHelpOptions = true)
 public class ListCommand implements Runnable {
 
+  enum CountMode {
+    full,
+    split
+  }
+
   @CommandLine.Option(
       names = {"--month", "-m"},
       description = "Month filter (format: yyyy-MM)")
   String month;
 
   @CommandLine.Option(names = "--from", description = "Start date (format: yyyy-MM-dd)")
-  String from;
+  LocalDate from;
+
+  @CommandLine.Option(names = "--day", description = "Specific date (format: yyyy-MM-dd)")
+  LocalDate day;
 
   @CommandLine.Option(names = "--to", description = "End date (format: yyyy-MM-dd)")
-  String to;
+  LocalDate to;
+
+  @CommandLine.Option(names = "--today", description = "List entries for today only")
+  boolean today;
 
   @CommandLine.Option(
       names = "--only-tag",
@@ -39,6 +51,12 @@ public class ListCommand implements Runnable {
       names = "--show-ids",
       description = "Show entry IDs for edit/delete operations")
   boolean showIds;
+
+  @CommandLine.Option(
+      names = "--count-mode",
+      description = "How to count time per tag: full (default: split)",
+      defaultValue = "split")
+  CountMode countMode;
 
   @Inject EntryStore entryStore;
 
@@ -96,16 +114,23 @@ public class ListCommand implements Runnable {
       System.out.println();
     }
 
-    // Daily tag summary
     if (showTags) {
       System.out.println();
       System.out.println("📎 Daily Tag Usage:");
       Map<LocalDate, Map<String, Integer>> dailyTagMap = new TreeMap<>();
+
       for (TimeEntry e : entries) {
         LocalDate date = e.startTime().toLocalDate();
         dailyTagMap.putIfAbsent(date, new HashMap<>());
-        for (String tag : e.tags()) {
-          dailyTagMap.get(date).merge(tag.toLowerCase(), e.durationMinutes(), Integer::sum);
+
+        List<String> tags = new ArrayList<>(e.tags());
+        int timePerTag =
+            (countMode == CountMode.split && !tags.isEmpty())
+                ? e.durationMinutes() / tags.size()
+                : e.durationMinutes();
+
+        for (String tag : tags) {
+          dailyTagMap.get(date).merge(tag.toLowerCase(), timePerTag, Integer::sum);
         }
       }
 
@@ -120,36 +145,48 @@ public class ListCommand implements Runnable {
       }
     }
 
-    // Overall tag summary
     if (showTags) {
       System.out.println();
-      System.out.println("📦 Overall Tag Summary:");
+      System.out.printf("📦 Overall Tag Summary (%s mode):%n", countMode);
       Map<String, Integer> tagTotals = new TreeMap<>();
+
       for (TimeEntry e : entries) {
-        for (String tag : e.tags()) {
-          tagTotals.merge(tag.toLowerCase(), e.durationMinutes(), Integer::sum);
+        List<String> tags = new ArrayList<>(e.tags());
+        int timePerTag =
+            (countMode == CountMode.split && !tags.isEmpty())
+                ? e.durationMinutes() / tags.size()
+                : e.durationMinutes();
+
+        for (String tag : tags) {
+          tagTotals.merge(tag.toLowerCase(), timePerTag, Integer::sum);
         }
       }
 
-      tagTotals.forEach(
-          (tag, minutes) -> System.out.printf("  • %-15s %s%n", tag, formatMinutes(minutes)));
+      tagTotals.entrySet().stream()
+          .sorted(Map.Entry.comparingByValue())
+          .collect(
+              Collectors.toMap(
+                  Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new))
+          .forEach(
+              (tag, minutes) -> System.out.printf("  • %-15s %s%n", tag, formatMinutes(minutes)));
     }
   }
 
   private boolean filterByDateRange(LocalDate entryDate) {
-    if (from == null && to == null) return true;
+    if (from == null && to == null && day == null && !today) {
+      return true;
+    }
 
-    try {
-      LocalDate fromDate = from != null ? LocalDate.parse(from) : LocalDate.MIN;
-      LocalDate toDate = to != null ? LocalDate.parse(to) : LocalDate.MAX;
-      return !entryDate.isBefore(fromDate) && !entryDate.isAfter(toDate);
-    } catch (DateTimeParseException e) {
-      System.out.println("❌ Invalid date format. Use yyyy-MM-dd for --from and --to.");
+    if (today) {
+      return entryDate.equals(LocalDate.now());
+    }
+
+    if (day != null && !entryDate.equals(day)) {
       return false;
     }
-  }
 
-  private String formatMinutes(int minutes) {
-    return String.format("%dh %02dm", minutes / 60, minutes % 60);
+    LocalDate fromDate = from != null ? from : LocalDate.MIN;
+    LocalDate toDate = to != null ? to : LocalDate.MAX;
+    return !entryDate.isBefore(fromDate) && !entryDate.isAfter(toDate);
   }
 }
