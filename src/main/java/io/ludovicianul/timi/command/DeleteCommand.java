@@ -17,8 +17,16 @@ import picocli.CommandLine;
     mixinStandardHelpOptions = true)
 public class DeleteCommand implements Runnable {
 
-  @CommandLine.Option(names = "--id", required = true, description = "ID of the entry to delete")
+  @CommandLine.Option(
+      names = {"--id", "-i"},
+      required = true,
+      description = "ID of the entry to delete")
   public String id;
+
+  @CommandLine.Option(
+      names = {"--force", "-f"},
+      description = "Force deletion without confirmation")
+  boolean force;
 
   @Inject GitManager gitManager;
   @Inject EntryStore entryStore;
@@ -39,13 +47,14 @@ public class DeleteCommand implements Runnable {
     System.out.printf("• Tags: %s%n", String.join(", ", entry.tags()));
     System.out.printf("• Note: %s%n", entry.note());
 
-    System.out.print("\nAre you sure you want to delete this entry? (y/N): ");
-    Scanner scanner = new Scanner(System.in);
-    String confirm = scanner.nextLine().trim().toLowerCase();
-
-    if (!confirm.equals("y")) {
-      System.out.println("❌ Deletion cancelled.");
-      return;
+    if (!force) {
+      System.out.print("\nAre you sure you want to delete this entry? (y/N): ");
+      Scanner scanner = new Scanner(System.in);
+      String confirm = scanner.nextLine().trim().toLowerCase();
+      if (!confirm.equals("y")) {
+        System.out.println("❌ Deletion cancelled.");
+        return;
+      }
     }
 
     if (entryStore.deleteById(UUID.fromString(id))) {
