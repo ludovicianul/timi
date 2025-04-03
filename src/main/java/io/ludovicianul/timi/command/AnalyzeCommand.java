@@ -1,5 +1,7 @@
 package io.ludovicianul.timi.command;
 
+import static io.ludovicianul.timi.util.Utils.formatMinutes;
+
 import io.ludovicianul.timi.persistence.EntryStore;
 import io.ludovicianul.timi.persistence.TimeEntry;
 import jakarta.inject.Inject;
@@ -20,7 +22,7 @@ public class AnalyzeCommand implements Runnable {
   boolean contextSwitch;
 
   @Option(names = "--by", description = "Grouping level: day or week", defaultValue = "day")
-  String by;
+  SplitBy by;
 
   @Option(names = "--target", description = "Target tag or activity for peak analysis")
   String target;
@@ -36,6 +38,11 @@ public class AnalyzeCommand implements Runnable {
 
   @Inject EntryStore entryStore;
 
+  enum SplitBy {
+    day,
+    week
+  }
+
   @Override
   public void run() {
     List<TimeEntry> entries = entryStore.loadAllEntries(null);
@@ -45,10 +52,21 @@ public class AnalyzeCommand implements Runnable {
       return;
     }
 
-    if (contextSwitch) analyzeContextSwitch(entries);
-    if (peak && target != null) analyzePeakUsage(entries, target.toLowerCase());
-    if (focusScore) analyzeDeepVsShallow(entries);
-    if (dowInsights) analyzeDayOfWeekInsights(entries);
+    if (contextSwitch) {
+      analyzeContextSwitch(entries);
+    }
+    if (peak && target != null) {
+      analyzePeakUsage(entries, target.toLowerCase());
+    } else if (peak) {
+      System.out.println("❌ Please provide a target for peak analysis.");
+      return;
+    }
+    if (focusScore) {
+      analyzeDeepVsShallow(entries);
+    }
+    if (dowInsights) {
+      analyzeDayOfWeekInsights(entries);
+    }
     if (!contextSwitch && !peak && !focusScore && !dowInsights) {
       summarize(entries);
       analyzeDeepVsShallow(entries);
@@ -56,13 +74,13 @@ public class AnalyzeCommand implements Runnable {
   }
 
   private void analyzeContextSwitch(List<TimeEntry> entries) {
-    System.out.printf("\n📊 Context Switching Analysis by %s%n%n", by.toUpperCase());
+    System.out.printf("\n📊 Context Switching Analysis by %s%n%n", by.name().toUpperCase());
 
     Map<String, Set<String>> grouped = new TreeMap<>();
 
     for (TimeEntry e : entries) {
       String key =
-          by.equalsIgnoreCase("week")
+          by == SplitBy.week
               ? getWeekKey(e.startTime().toLocalDate())
               : e.startTime().toLocalDate().toString();
 
@@ -89,7 +107,7 @@ public class AnalyzeCommand implements Runnable {
 
     for (TimeEntry e : entries) {
       String key =
-          by.equalsIgnoreCase("week")
+          by == SplitBy.week
               ? getWeekKey(e.startTime().toLocalDate())
               : e.startTime().toLocalDate().toString();
 
@@ -194,11 +212,13 @@ public class AnalyzeCommand implements Runnable {
       int total = logs.stream().mapToInt(TimeEntry::durationMinutes).sum();
 
       String profile =
-          uniqueTypes.size() == 1
+          uniqueTypes.size() == 2
               ? "🔵 Deep Work"
-              : uniqueTypes.size() <= 2 ? "🟡 Focused" : "🔴 Context Switching";
+              : uniqueTypes.size() <= 3 ? "🟡 Focused" : "🔴 Context Switching";
       System.out.printf("%s → %s (%s)%n", date, profile, formatMinutes(total));
     }
+    System.out.println(
+        "\n🔵 Deep Work = 2 types; 🟡 Focused = 3 types; 🔴 Context Switching > 3 types");
   }
 
   private void analyzeDayOfWeekInsights(List<TimeEntry> entries) {
@@ -221,9 +241,5 @@ public class AnalyzeCommand implements Runnable {
     int week = date.get(weekFields.weekOfWeekBasedYear());
     int year = date.getYear();
     return String.format("Week %02d, %d", week, year);
-  }
-
-  private String formatMinutes(int minutes) {
-    return String.format("%dh %02dm", minutes / 60, minutes % 60);
   }
 }
