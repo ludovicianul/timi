@@ -238,7 +238,7 @@ public class EntryStore {
 
   public void saveToFile(Path file, List<TimeEntry> entries) {
     try {
-      mapper.writeValue(file.toFile(), entries);
+      mapper.writerWithDefaultPrettyPrinter().writeValue(file.toFile(), entries);
     } catch (IOException e) {
       throw new RuntimeException("Failed to save to file: " + file, e);
     }
