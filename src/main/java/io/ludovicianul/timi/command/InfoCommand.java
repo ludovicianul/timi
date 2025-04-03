@@ -41,7 +41,10 @@ public class InfoCommand implements Runnable {
 
     // Optional stats
     try (var paths = Files.list(Path.of(System.getProperty("user.home"), ".timi", "entries"))) {
-      long entryCount = paths.filter(p -> p.toString().endsWith(".json")).count();
+      long entryCount =
+          paths
+              .filter(p -> p.toString().endsWith(".json") && !p.toString().endsWith("index.json"))
+              .count();
       System.out.println("\n📊 Stored monthly entry files: " + entryCount);
     } catch (IOException e) {
       System.out.println("⚠️ Could not read entry directory.");
