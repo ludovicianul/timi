@@ -1,5 +1,7 @@
 package io.ludovicianul.timi.command;
 
+import static io.ludovicianul.timi.util.Utils.parseDateTime;
+
 import io.ludovicianul.timi.git.GitManager;
 import io.ludovicianul.timi.persistence.EntryResolver;
 import io.ludovicianul.timi.persistence.EntryStore;
@@ -50,21 +52,48 @@ public class EditCommand implements Runnable {
   private String activityType;
 
   @CommandLine.Option(
-      names = {"--tags"},
-      description = "New comma-separated list of tags (will replace existing tags).")
-  private String tagsStr;
+      names = {"--tags", "-tag"},
+      description = "New comma-separated list of tags (will replace existing tags).",
+      split = ",")
+  private List<String> tags;
 
   @CommandLine.Option(
       names = {"--interactive"},
       description = "Enable interactive editing mode (prompts for all fields).")
   private boolean interactive;
 
-  // Define common date/time formats for parsing flexibility
-  private static final List<DateTimeFormatter> SUPPORTED_FORMATTERS =
-      Arrays.asList(
-          DateTimeFormatter.ISO_LOCAL_DATE_TIME,
-          DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
-          DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+  // Record to hold all entry field values
+  private record EntryFields(
+      LocalDateTime startTime,
+      Integer durationMinutes,
+      String note,
+      String activityType,
+      Set<String> tags) {
+
+    // Factory method to create from TimeEntry
+    static EntryFields from(TimeEntry entry) {
+      return new EntryFields(
+          entry.startTime(),
+          entry.durationMinutes(),
+          entry.note(),
+          entry.activityType(),
+          entry.tags());
+    }
+
+    // Format a field for display in comparisons
+    String formatStartTime() {
+      return startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+    }
+
+    // Check if equal to original entry
+    boolean isEqualTo(EntryFields other) {
+      return Objects.equals(startTime, other.startTime)
+          && Objects.equals(durationMinutes, other.durationMinutes)
+          && Objects.equals(note, other.note)
+          && Objects.equals(activityType, other.activityType)
+          && Objects.equals(tags, other.tags);
+    }
+  }
 
   @Override
   public void run() {
@@ -76,25 +105,29 @@ public class EditCommand implements Runnable {
 
     TimeEntry original = entryOpt.get();
     UUID entryId = UUID.fromString(id);
-    if (interactive) {
-      runInteractive(original, entryId);
-    } else {
-      runNonInteractive(original, entryId);
+    EntryFields originalFields = EntryFields.from(original);
+
+    EntryFields updatedFields =
+        interactive ? runInteractive(originalFields) : runNonInteractive(originalFields);
+
+    if (updatedFields == null) {
+      return; // Operation cancelled or no changes to make
     }
+
+    processUpdate(entryId, originalFields, updatedFields);
   }
 
-  /** Handles editing in non-interactive mode based on provided command-line options. */
-  private void runNonInteractive(TimeEntry original, UUID entryId) {
+  private EntryFields runNonInteractive(EntryFields original) {
     if (startTimeStr == null
         && duration == null
         && note == null
         && activityType == null
-        && tagsStr == null) {
+        && tags == null) {
       System.out.println(
-          "ℹ️ No update options provided (--duration, --note, --start-time, --type, --tags). Nothing to edit.");
+          "ℹ️ No update options provided (--duration, --note, --start, --type, --tags). Nothing to edit.");
       System.out.println(
           "Use --interactive for guided editing or provide specific options to change.");
-      return;
+      return null;
     }
 
     LocalDateTime newStartTime = original.startTime();
@@ -103,91 +136,107 @@ public class EditCommand implements Runnable {
     String newType = (activityType != null) ? activityType.toLowerCase() : original.activityType();
     Set<String> newTags = original.tags();
 
-    // Parse start time if provided
     if (startTimeStr != null) {
-      Optional<LocalDateTime> parsedTime = parseDateTime(startTimeStr);
-      if (parsedTime.isPresent()) {
-        newStartTime = parsedTime.get();
-      } else {
+      try {
+        newStartTime = parseDateTime(startTimeStr);
+      } catch (DateTimeParseException e) {
         System.err.printf(
             "❌ Invalid format for --start: '%s'. Keeping original: %s%n",
             startTimeStr, original.startTime());
       }
     }
 
-    if (tagsStr != null) {
-      newTags = parseTags(tagsStr);
+    if (tags != null) {
+      newTags = tags.stream().map(String::toLowerCase).collect(Collectors.toSet());
     }
 
-    performUpdate(entryId, newStartTime, newDuration, newNote, newType, newTags, original);
+    EntryFields updatedFields =
+        new EntryFields(newStartTime, newDuration, newNote, newType, newTags);
+
+    if (!showChangesAndConfirm(original, updatedFields)) {
+      return null;
+    }
+
+    return updatedFields;
   }
 
-  /** Handles editing in interactive mode, prompting the user for each field. */
-  private void runInteractive(TimeEntry original, UUID entryId) {
+  private EntryFields runInteractive(EntryFields original) {
     try (Scanner scanner = new Scanner(System.in)) {
       System.out.println("\n--- Interactive Entry Editing ---\n");
-      System.out.printf("Editing Entry ID: %s%n", original.id());
+      System.out.printf("Editing Entry ID: %s%n", id);
 
       LocalDateTime newStart = promptForDateTime(scanner, original.startTime());
-
       Integer newDuration = promptForInteger(scanner, original.durationMinutes());
-
       String newType =
           promptForString(scanner, "Activity type", original.activityType()).toLowerCase();
-
       Set<String> newTags = promptForTags(scanner, original.tags());
+      String newNote = promptForString(scanner, "Note", original.note());
 
-      String newNote = promptForString(scanner, "Note", original.note()); // Allow empty notes
+      EntryFields updatedFields = new EntryFields(newStart, newDuration, newNote, newType, newTags);
 
-      performUpdate(entryId, newStart, newDuration, newNote, newType, newTags, original);
+      if (!showChangesAndConfirm(original, updatedFields)) {
+        return null;
+      }
 
+      return updatedFields;
     } catch (NoSuchElementException e) {
       System.err.println("\n❌ Input stream closed unexpectedly. Aborting edit.");
+      return null;
     } catch (Exception e) {
       System.err.println(
           "\n❌ An unexpected error occurred during interactive editing: " + e.getMessage());
+      return null;
     }
   }
 
-  /** Executes the actual update in the EntryStore and commits via GitManager. */
-  private void performUpdate(
-      UUID entryId,
-      LocalDateTime newStart,
-      Integer newDuration,
-      String newNote,
-      String newType,
-      Set<String> newTags,
-      TimeEntry original) {
-    if (Objects.equals(newStart, original.startTime())
-        && Objects.equals(newDuration, original.durationMinutes())
-        && Objects.equals(newNote, original.note())
-        && Objects.equals(newType, original.activityType())
-        && Objects.equals(newTags, original.tags())) {
+  private boolean showChangesAndConfirm(EntryFields original, EntryFields updated) {
+    System.out.println("\nPlease review the changes:");
+    System.out.printf(
+        "• Original Start Time: %s -> New Start Time: %s%n",
+        original.formatStartTime(), updated.formatStartTime());
+    System.out.printf(
+        "• Original Duration: %d -> New Duration: %d%n",
+        original.durationMinutes(), updated.durationMinutes());
+    System.out.printf(
+        "• Original Activity Type: %s -> New Activity Type: %s%n",
+        original.activityType(), updated.activityType());
+    System.out.printf("• Original Tags: %s -> New Tags: %s%n", original.tags(), updated.tags());
+    System.out.printf("• Original Note: %s -> New Note: %s%n", original.note(), updated.note());
+
+    System.out.print("\nConfirm update? (y/N): ");
+    Scanner scanner = new Scanner(System.in);
+    String confirm = scanner.nextLine().trim().toLowerCase();
+
+    if (!confirm.equals("y")) {
+      System.out.println("ℹ️ No changes made. Update cancelled.");
+      return false;
+    }
+
+    return true;
+  }
+
+  private void processUpdate(UUID entryId, EntryFields original, EntryFields updated) {
+    if (updated.isEqualTo(original)) {
       System.out.println("ℹ️ No changes detected. Entry remains unchanged.");
       return;
     }
 
     System.out.printf("Updating Entry %s...%n", entryId);
-    boolean updated =
-        entryStore.updateFullEntry(entryId, newStart, newDuration, newNote, newType, newTags);
+    boolean success =
+        entryStore.updateFullEntry(
+            entryId,
+            updated.startTime(),
+            updated.durationMinutes(),
+            updated.note(),
+            updated.activityType(),
+            updated.tags());
 
-    if (updated) {
+    if (success) {
       gitManager.commit("Edited entry " + entryId);
       System.out.println("✅ Entry updated successfully.");
     } else {
       System.err.println("❌ Failed to update entry in store. Check logs for details.");
     }
-  }
-
-  private Optional<LocalDateTime> parseDateTime(String dateTimeStr) {
-    for (DateTimeFormatter formatter : SUPPORTED_FORMATTERS) {
-      try {
-        return Optional.of(LocalDateTime.parse(dateTimeStr, formatter));
-      } catch (DateTimeParseException e) {
-        // Try next format
-      }
-    }
-    return Optional.empty();
   }
 
   private Set<String> parseTags(String tagsInput) {
@@ -209,12 +258,10 @@ public class EditCommand implements Runnable {
       if (input.isEmpty()) {
         return originalValue;
       }
-      Optional<LocalDateTime> parsed = parseDateTime(input);
-      if (parsed.isPresent()) {
-        return parsed.get();
-      } else {
-        System.out.println(
-            "⚠️ Invalid date/time format. Please use formats like 'yyyy-MM-ddTHH:mm:ss' or 'yyyy-MM-dd HH:mm'. Try again.");
+      try {
+        return parseDateTime(input);
+      } catch (DateTimeParseException e) {
+        System.out.println("⚠️ Invalid date/time format. Please try again.");
       }
     }
   }
