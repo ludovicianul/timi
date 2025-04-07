@@ -35,6 +35,7 @@ import picocli.CommandLine;
 public class ConfigCommand implements Runnable {
   @Override
   public void run() {
-    System.out.println("Use subcommands: add-tag, add-type, show-tags, show-types");
+    System.out.println(
+        "Use subcommands: add-tag, add-meta-tag, add-type, show-tags, show-meta-tags, show-types");
   }
 }

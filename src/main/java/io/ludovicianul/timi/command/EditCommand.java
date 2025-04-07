@@ -98,7 +98,7 @@ public class EditCommand implements Runnable {
         && tags == null
         && metaTags == null) {
       System.out.println(
-          "ℹ️ No update options provided (--duration, --note, --start, --type, --tags). Nothing to edit.");
+          "ℹ️ No update options provided (--duration, --note, --start, --type, --tags, --meta-tags). Nothing to edit.");
       System.out.println(
           "Use --interactive for guided editing or provide specific options to change.");
       return null;
