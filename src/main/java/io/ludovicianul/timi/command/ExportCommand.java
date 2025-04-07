@@ -47,6 +47,13 @@ public class ExportCommand implements Runnable {
   List<String> tags = List.of();
 
   @CommandLine.Option(
+      names = {"--meta-tags", "--meta-tag"},
+      required = false,
+      description = "Filter entries that contain the specified meta tags (semicolon separated)",
+      split = ",")
+  List<String> metaTags = List.of();
+
+  @CommandLine.Option(
       names = {"--output", "-o"},
       required = true,
       description = "Output file path")
@@ -85,6 +92,9 @@ public class ExportCommand implements Runnable {
                   if (!tags.isEmpty()) {
                     match = match && e.tags().containsAll(tags);
                   }
+                  if (!metaTags.isEmpty()) {
+                    match = match && e.metaTags().containsAll(metaTags);
+                  }
                   return match;
                 })
             .toList();
@@ -102,17 +112,18 @@ public class ExportCommand implements Runnable {
 
   private void exportCSV(List<TimeEntry> entries) throws IOException {
     try (FileWriter writer = new FileWriter(outputPath)) {
-      writer.write("ID,Start Time,Duration,Activity Type,Tags,Note\n");
+      writer.write("ID,Start Time,Duration,Activity Type,Tags,Meta Tags,Note\n");
       DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
       for (TimeEntry e : entries) {
         String line =
             String.format(
-                "\"%s\",\"%s\",%d,\"%s\",\"%s\",\"%s\"\n",
+                "\"%s\",\"%s\",%d,\"%s\",\"%s\",\"%s\",\"%s\"\n",
                 e.id(),
                 e.startTime().format(dtf),
                 e.durationMinutes(),
                 e.activityType(),
                 String.join(";", e.tags()),
+                String.join(";", e.metaTags()),
                 e.note().replace("\"", "\"\""));
         writer.write(line);
       }

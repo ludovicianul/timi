@@ -19,6 +19,9 @@ public class ListConfigCommand implements Runnable {
     System.out.println("\n🏷  Configured Tags:");
     configManager.getTags().forEach(tag -> System.out.println("  • " + tag));
 
+    System.out.println("\n\uD83D\uDD16  Configured Meta Tags:");
+    configManager.getMetaTags().forEach(tag -> System.out.println("  • " + tag));
+
     System.out.println("\n⚙️  Advanced Settings:");
     System.out.println("  • gitEnabled: " + configManager.isGitEnabled());
     System.out.println("  • deepWorkValue: " + configManager.getDeepWorkValue());

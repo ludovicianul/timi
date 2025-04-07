@@ -131,7 +131,9 @@ public class EntryStore {
 
   public Optional<TimeEntry> findById(UUID id) {
     String fileName = index.get(id);
-    if (fileName == null) return Optional.empty();
+    if (fileName == null) {
+      return Optional.empty();
+    }
     Path file = baseDir.resolve(fileName);
 
     List<TimeEntry> entries = loadFromFile(file);
@@ -162,7 +164,8 @@ public class EntryStore {
       Integer newDuration,
       String newNote,
       String newActivityType,
-      Set<String> newTags) {
+      Set<String> newTags,
+      Set<String> newMetaTags) {
 
     String currentFileName = index.get(id);
     if (currentFileName == null) return false;
@@ -183,7 +186,8 @@ public class EntryStore {
             newDuration != null ? newDuration : existing.durationMinutes(),
             newNote != null ? newNote : existing.note(),
             newActivityType != null ? newActivityType : existing.activityType(),
-            newTags != null ? newTags : existing.tags());
+            newTags != null ? newTags : existing.tags(),
+            newMetaTags != null ? newMetaTags : existing.metaTags());
 
     Path newFile = resolveFileFor(updatedEntry.startTime());
 
@@ -229,7 +233,9 @@ public class EntryStore {
 
   public List<TimeEntry> loadFromFile(Path file) {
     try {
-      if (!Files.exists(file)) return new ArrayList<>();
+      if (!Files.exists(file)) {
+        return new ArrayList<>();
+      }
       return new ArrayList<>(Arrays.asList(mapper.readValue(file.toFile(), TimeEntry[].class)));
     } catch (IOException e) {
       throw new RuntimeException("Failed to load from file: " + file, e);

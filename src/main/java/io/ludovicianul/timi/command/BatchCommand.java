@@ -52,7 +52,7 @@ public class BatchCommand implements Runnable {
             parts[i] = parts[i].replaceAll("^\"|\"$", "");
           }
 
-          if (parts.length < 5) {
+          if (parts.length < 6) {
             System.err.println("❌ Invalid line: " + line);
             continue;
           }
@@ -65,8 +65,14 @@ public class BatchCommand implements Runnable {
                   .map(String::trim)
                   .filter(s -> !s.isEmpty())
                   .collect(Collectors.toSet());
-          String note = parts[4].trim();
-          TimeEntry entry = new TimeEntry(UUID.randomUUID(), startTime, duration, note, type, tags);
+          Set<String> metaTags =
+              Arrays.stream(parts[4].split(";"))
+                  .map(String::trim)
+                  .filter(s -> !s.isEmpty())
+                  .collect(Collectors.toSet());
+          String note = parts[5].trim();
+          TimeEntry entry =
+              new TimeEntry(UUID.randomUUID(), startTime, duration, note, type, tags, metaTags);
           entryStore.saveEntry(entry);
           gitManager.commit("Batch added entry on " + startTime.format(DateTimeFormatter.ISO_DATE));
           System.out.println("✅ Added entry: " + entry.id());

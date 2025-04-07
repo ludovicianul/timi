@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -19,10 +20,17 @@ import picocli.CommandLine.Option;
     mixinStandardHelpOptions = true)
 public class SearchCommand implements Runnable {
 
-  @Option(names = "--tag", description = "Search by tag (case-insensitive, substring)")
+  @Option(names = "--tag", description = "Search by tag (case-insensitive, match whole tag)")
   String tag;
 
-  @Option(names = "--type", description = "Search by activity type (case-insensitive, substring)")
+  @Option(
+      names = "--meta-tag",
+      description = "Search by meta tag (case-insensitive, match whole tag)")
+  String metaTag;
+
+  @Option(
+      names = "--type",
+      description = "Search by activity type (case-insensitive, match whole type)")
   String activity;
 
   @Option(names = "--note", description = "Search by note content (case-insensitive, substring)")
@@ -44,8 +52,8 @@ public class SearchCommand implements Runnable {
 
   @Override
   public void run() {
-    if (tag == null && activity == null && note == null) {
-      System.out.println("\n❌ Please provide at least one of: --tag, --activity, or --note");
+    if (tag == null && activity == null && note == null && metaTag == null) {
+      System.out.println("\n❌ Please provide at least one of: --tag, --metaTag, --type, or --note");
       return;
     }
 
@@ -63,27 +71,23 @@ public class SearchCommand implements Runnable {
       }
     }
 
-    String tagLower = tag != null ? tag.toLowerCase() : null;
-    String activityLower = activity != null ? activity.toLowerCase() : null;
-    String noteLower = note != null ? note.toLowerCase() : null;
-
     List<TimeEntry> matches =
         entryStore.loadAllEntries(null).stream()
             .filter(
                 e -> {
-                  boolean tagMatch =
-                      tagLower == null
-                          || e.tags().stream().anyMatch(t -> t.equalsIgnoreCase(tagLower));
+                  boolean tagMatch = e.tagsMatching(tag);
+                  boolean metaTagMatch = e.metaTagsMatching(metaTag);
                   boolean activityMatch =
-                      activityLower == null || e.activityType().equalsIgnoreCase(activityLower);
+                      activity == null || e.activityType().equalsIgnoreCase(activity);
                   boolean noteMatch =
-                      noteLower == null
-                          || (e.note() != null && e.note().toLowerCase().contains(noteLower));
+                      note == null
+                          || (e.note() != null
+                              && e.note().toLowerCase().contains(note.toLowerCase(Locale.ROOT)));
                   boolean dateMatch =
                       (fromDate == null
                           || (!e.startTime().toLocalDate().isBefore(fromDate)
                               && !e.startTime().toLocalDate().isAfter(toDate)));
-                  return tagMatch && activityMatch && noteMatch && dateMatch;
+                  return tagMatch && metaTagMatch && activityMatch && noteMatch && dateMatch;
                 })
             .sorted(Comparator.comparing(TimeEntry::startTime))
             .toList();
@@ -109,7 +113,8 @@ public class SearchCommand implements Runnable {
       String time = e.startTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
       String duration = formatMinutes(e.durationMinutes());
       System.out.printf(
-          "[%s]  %s  • %-12s  • %s  • %s%n", time, duration, e.activityType(), e.tags(), e.note());
+          "[%s]  %s  • %-12s  • %s • %s • %s%n",
+          time, duration, e.activityType(), e.tags(), e.metaTags(), e.note());
     }
 
     System.out.printf("%n🕒 Total Time: %s%n", formatMinutes(totalMinutes));

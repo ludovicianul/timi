@@ -161,7 +161,13 @@ public class AnalyzeCommand implements Runnable {
             .map(
                 e ->
                     new TimeEntry(
-                        null, e.getKey().atStartOfDay(), e.getValue(), null, "", Set.of()))
+                        null,
+                        e.getKey().atStartOfDay(),
+                        e.getValue(),
+                        null,
+                        "",
+                        Set.of(),
+                        Set.of()))
             .orElse(null);
 
     var mostCommonTag =

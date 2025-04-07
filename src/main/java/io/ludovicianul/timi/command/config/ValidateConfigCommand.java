@@ -29,6 +29,11 @@ public class ValidateConfigCommand implements Runnable {
           errors.add("⚠️ Invalid tag in entry " + entry.id() + ": " + tag);
         }
       }
+      for (String metaTag : entry.metaTags()) {
+        if (configManager.isNotValidMetaTag(metaTag)) {
+          errors.add("⚠️ Invalid meta tag in entry " + entry.id() + ": " + metaTag);
+        }
+      }
     }
 
     if (errors.isEmpty()) {

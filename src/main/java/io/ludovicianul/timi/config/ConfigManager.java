@@ -29,6 +29,7 @@ public class ConfigManager {
         config = new ConfigData();
         config.tags.add("general");
         config.types.addAll(Set.of("work", "meeting", "prep"));
+        config.metaTags.addAll(Set.of("ai", "boring", "urgent"));
         save();
       }
     } catch (IOException e) {
@@ -113,6 +114,14 @@ public class ConfigManager {
     return config.types;
   }
 
+  public Set<String> getMetaTags() {
+    return config.metaTags;
+  }
+
+  public boolean isNotValidMetaTag(String tag) {
+    return !config.metaTags.contains(tag.toLowerCase());
+  }
+
   public boolean isNotValidTag(String tag) {
     return !config.tags.contains(tag.toLowerCase());
   }
@@ -157,10 +166,20 @@ public class ConfigManager {
     return config.colorOutput;
   }
 
+  public boolean addMetaTag(String normalizedName) {
+    if (!config.metaTags.contains(normalizedName)) {
+      config.metaTags.add(normalizedName);
+      save();
+      return true;
+    }
+    return false;
+  }
+
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class ConfigData {
     public Set<String> tags = new HashSet<>();
     public Set<String> types = new HashSet<>();
+    public Set<String> metaTags = new HashSet<>();
     public boolean gitEnabled = true;
     public boolean colorOutput = false;
     public int deepWorkValue = 2;

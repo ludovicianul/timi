@@ -45,8 +45,16 @@ public class ListCommand implements Runnable {
       description = "Show only entries with this tag (case-insensitive)")
   String onlyTag;
 
+  @CommandLine.Option(
+      names = "--only-meta-tag",
+      description = "Show only entries with this meta tag (case-insensitive)")
+  String onlyMetaTag;
+
   @CommandLine.Option(names = "--show-tags", description = "Show tags for each entry")
   boolean showTags;
+
+  @CommandLine.Option(names = "--show-meta-tags", description = "Show meta tags for each entry")
+  boolean showMetaTags;
 
   @CommandLine.Option(
       names = "--show-ids",
@@ -69,9 +77,8 @@ public class ListCommand implements Runnable {
         entryStore.loadAllEntries(month).stream()
             .sorted(Comparator.comparing(TimeEntry::startTime))
             .filter(e -> filterByDateRange(e.startTime().toLocalDate()))
-            .filter(
-                e ->
-                    onlyTag == null || e.tags().stream().anyMatch(t -> t.equalsIgnoreCase(onlyTag)))
+            .filter(e -> e.tagsMatching(onlyTag))
+            .filter(e -> e.metaTagsMatching(onlyMetaTag))
             .toList();
 
     if (entries.isEmpty()) {
@@ -113,6 +120,9 @@ public class ListCommand implements Runnable {
       System.out.printf("[%s]  %s  • %-12s  • %s", start, duration, e.activityType(), e.note());
       if (showTags && !e.tags().isEmpty()) {
         System.out.print("  • Tags: " + String.join(", ", e.tags()));
+      }
+      if (showMetaTags && !e.metaTags().isEmpty()) {
+        System.out.print("  • Meta Tags: " + String.join(", ", e.metaTags()));
       }
       System.out.println();
     }

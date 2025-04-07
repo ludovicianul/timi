@@ -58,6 +58,12 @@ public class EditCommand implements Runnable {
   private List<String> tags;
 
   @CommandLine.Option(
+      names = {"--meta-tags", "-meta-tag"},
+      description = "New comma-separated list of meta tags (will replace existing meta tags).",
+      split = ",")
+  private List<String> metaTags;
+
+  @CommandLine.Option(
       names = {"--interactive", "-i"},
       description = "Enable interactive editing mode (prompts for all fields).")
   private boolean interactive;
@@ -89,7 +95,8 @@ public class EditCommand implements Runnable {
         && duration == null
         && note == null
         && activityType == null
-        && tags == null) {
+        && tags == null
+        && metaTags == null) {
       System.out.println(
           "ℹ️ No update options provided (--duration, --note, --start, --type, --tags). Nothing to edit.");
       System.out.println(
@@ -102,6 +109,7 @@ public class EditCommand implements Runnable {
     String newNote = (note != null) ? note : original.note();
     String newType = (activityType != null) ? activityType.toLowerCase() : original.activityType();
     Set<String> newTags = original.tags();
+    Set<String> newMetaTags = original.metaTags();
 
     if (startTimeStr != null) {
       try {
@@ -117,8 +125,12 @@ public class EditCommand implements Runnable {
       newTags = tags.stream().map(String::toLowerCase).collect(Collectors.toSet());
     }
 
+    if (metaTags != null) {
+      newMetaTags = metaTags.stream().map(String::toLowerCase).collect(Collectors.toSet());
+    }
+
     EntryFields updatedFields =
-        new EntryFields(newStartTime, newDuration, newNote, newType, newTags);
+        new EntryFields(newStartTime, newDuration, newNote, newType, newTags, newMetaTags);
 
     if (!showChangesAndConfirm(original, updatedFields)) {
       return null;
@@ -136,10 +148,13 @@ public class EditCommand implements Runnable {
       Integer newDuration = promptForInteger(scanner, original.durationMinutes());
       String newType =
           promptForString(scanner, "Activity type", original.activityType()).toLowerCase();
-      Set<String> newTags = promptForTags(scanner, original.tags());
+      Set<String> newTags = promptFor(scanner, original.tags(), "Tags");
+      Set<String> newMetaTags = promptFor(scanner, original.metaTags(), "Meta tags");
+
       String newNote = promptForString(scanner, "Note", original.note());
 
-      EntryFields updatedFields = new EntryFields(newStart, newDuration, newNote, newType, newTags);
+      EntryFields updatedFields =
+          new EntryFields(newStart, newDuration, newNote, newType, newTags, newMetaTags);
 
       if (!showChangesAndConfirm(original, updatedFields)) {
         return null;
@@ -168,6 +183,8 @@ public class EditCommand implements Runnable {
         "• Original Activity Type: %s -> New Activity Type: %s%n",
         original.activityType(), updated.activityType());
     System.out.printf("• Original Tags: %s -> New Tags: %s%n", original.tags(), updated.tags());
+    System.out.printf(
+        "• Original Meta Tags: %s -> New Meta Tags: %s%n", original.metaTags(), updated.metaTags());
     System.out.printf("• Original Note: %s -> New Note: %s%n", original.note(), updated.note());
 
     System.out.print("\nConfirm update? (y/N): ");
@@ -196,7 +213,8 @@ public class EditCommand implements Runnable {
             updated.durationMinutes(),
             updated.note(),
             updated.activityType(),
-            updated.tags());
+            updated.tags(),
+            updated.metaTags());
 
     if (success) {
       gitManager.commit("Edited entry " + entryId);
@@ -256,10 +274,10 @@ public class EditCommand implements Runnable {
     return input.isEmpty() ? originalValue : input.trim();
   }
 
-  private Set<String> promptForTags(Scanner scanner, Set<String> originalValue) {
+  private Set<String> promptFor(Scanner scanner, Set<String> originalValue, String tagsType) {
     String originalTagsStr = String.join(",", originalValue);
     String displayOriginal = originalTagsStr.isEmpty() ? "<none>" : originalTagsStr;
-    System.out.printf("%s [%s]: ", "Tags (comma-separated)", displayOriginal);
+    System.out.printf("%s %s [%s]: ", tagsType, "(comma-separated)", displayOriginal);
     String input = scanner.nextLine().trim();
     return input.isEmpty() ? originalValue : parseTags(input);
   }
@@ -269,7 +287,8 @@ public class EditCommand implements Runnable {
       Integer durationMinutes,
       String note,
       String activityType,
-      Set<String> tags) {
+      Set<String> tags,
+      Set<String> metaTags) {
 
     static EntryFields from(TimeEntry entry) {
       return new EntryFields(
@@ -277,7 +296,8 @@ public class EditCommand implements Runnable {
           entry.durationMinutes(),
           entry.note(),
           entry.activityType(),
-          entry.tags());
+          entry.tags(),
+          entry.metaTags());
     }
 
     String formatStartTime() {

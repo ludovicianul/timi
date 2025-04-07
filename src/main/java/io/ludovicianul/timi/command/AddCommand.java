@@ -49,6 +49,12 @@ public class AddCommand implements Runnable {
   private List<String> tags;
 
   @CommandLine.Option(
+      names = {"--meta-tags", "--meta-tag"},
+      description = "Comma-separated list of meta meta tags (case-insensitive).",
+      split = ",")
+  private List<String> metaTags;
+
+  @CommandLine.Option(
       names = {"--note", "-n"},
       description = "Note for the entry. Defaults to empty if omitted.")
   private String note;
@@ -63,6 +69,7 @@ public class AddCommand implements Runnable {
     Integer durationMinutes;
     String type;
     Set<String> tags = Collections.emptySet();
+    Set<String> metaTags = Collections.emptySet();
     String note = "";
   }
 
@@ -106,6 +113,9 @@ public class AddCommand implements Runnable {
     System.out.printf("• Activity Type: %s%n", inputs.type);
     System.out.printf(
         "• Tags: %s%n", inputs.tags.isEmpty() ? "<none>" : String.join(", ", inputs.tags));
+    System.out.printf(
+        "• Meta tags: %s%n",
+        inputs.metaTags.isEmpty() ? "<none>" : String.join(", ", inputs.metaTags));
     System.out.printf("• Note: %s%n", inputs.note.isEmpty() ? "<empty>" : inputs.note);
 
     System.out.print("\nConfirm addition? (y/N): ");
@@ -130,6 +140,10 @@ public class AddCommand implements Runnable {
 
     if (this.tags != null) {
       data.tags = tags.stream().map(String::toLowerCase).collect(Collectors.toSet());
+    }
+
+    if (this.metaTags != null) {
+      data.metaTags = metaTags.stream().map(String::toLowerCase).collect(Collectors.toSet());
     }
 
     if (interactive) {
@@ -159,11 +173,25 @@ public class AddCommand implements Runnable {
 
       if (this.tags == null) {
         data.tags =
-            promptForTags(scanner, String.format("Tags (options: %s)", configManager.getTags()));
+            promptForTags(
+                scanner,
+                String.format("Tags (options: %s)", configManager.getTags()),
+                configManager.getTags());
       } else {
         System.out.printf(
             "Using provided tags: %s%n",
             data.tags.isEmpty() ? "<none>" : String.join(",", data.tags));
+      }
+      if (this.metaTags == null) {
+        data.metaTags =
+            promptForTags(
+                scanner,
+                String.format("Meta tags (options: %s)", configManager.getMetaTags()),
+                configManager.getMetaTags());
+      } else {
+        System.out.printf(
+            "Using provided meta tags: %s%n",
+            data.metaTags.isEmpty() ? "<none>" : String.join(",", data.metaTags));
       }
       if (this.note == null) {
         data.note = promptForString(scanner, "Note", s -> false);
@@ -209,6 +237,13 @@ public class AddCommand implements Runnable {
         return false;
       }
     }
+    for (String tag : data.metaTags) {
+      if (configManager.isNotValidMetaTag(tag)) {
+        System.err.printf(
+            "❌ Invalid meta tag: '%s'. Allowed: %s%n", tag, configManager.getMetaTags());
+        return false;
+      }
+    }
     return true;
   }
 
@@ -220,14 +255,16 @@ public class AddCommand implements Runnable {
             data.durationMinutes,
             data.note,
             data.type,
-            data.tags);
+            data.tags,
+            data.metaTags);
 
     System.out.printf(
-        "\nAdding entry: Start=%s, Duration=%d, Type=%s, Tags=%s, Note='%s'%n",
+        "\nAdding entry: Start=%s, Duration=%d, Type=%s, Tags=%s, Meta tags=%s, Note='%s'%n",
         entry.startTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
         entry.durationMinutes(),
         entry.activityType(),
         entry.tags().isEmpty() ? "<none>" : String.join(",", entry.tags()),
+        entry.metaTags().isEmpty() ? "<none>" : String.join(",", entry.metaTags()),
         entry.note());
 
     try {
@@ -297,7 +334,7 @@ public class AddCommand implements Runnable {
     }
   }
 
-  private Set<String> promptForTags(Scanner scanner, String prompt) {
+  private Set<String> promptForTags(Scanner scanner, String prompt, Set<String> allowedTags) {
     while (true) {
       System.out.printf("%s [%s]: ", prompt, "<empty>");
       String input = scanner.nextLine().trim();
@@ -306,12 +343,11 @@ public class AddCommand implements Runnable {
       }
       Set<String> inputTags = parseTags(input);
       Set<String> difference = new HashSet<>(inputTags);
-      difference.removeAll(configManager.getTags());
+      difference.removeAll(allowedTags);
       if (difference.isEmpty()) {
         return inputTags;
       } else {
-        System.err.printf(
-            "❌ Invalid tag(s): '%s'. Allowed: %s%n", difference, configManager.getTags());
+        System.err.printf("❌ Invalid tag(s): '%s'. Allowed: %s%n", difference, allowedTags);
       }
     }
   }

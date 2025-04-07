@@ -19,8 +19,11 @@ import picocli.CommandLine.Option;
     mixinStandardHelpOptions = true)
 public class NotesCommand implements Runnable {
 
-  @Option(names = "--tag", required = true, description = "Tag to filter by (case-insensitive)")
+  @Option(names = "--tag", description = "Tag to filter by (case-insensitive)")
   String tag;
+
+  @Option(names = "--meta-tag", description = "Meta tag to filter by (case-insensitive)")
+  String metaTag;
 
   @Option(names = "--month", description = "Month filter (format: yyyy-MM)")
   String month;
@@ -32,8 +35,10 @@ public class NotesCommand implements Runnable {
 
   @Override
   public void run() {
-    String normalizedTag = tag.toLowerCase();
-
+    if (tag == null && metaTag == null) {
+      System.out.println("\n❌ Please provide at least one of: --tag or --meta-tag");
+      return;
+    }
     Predicate<LocalDate> dateFilter = buildDateFilter();
 
     if (dateFilter == null) {
@@ -43,21 +48,22 @@ public class NotesCommand implements Runnable {
 
     List<TimeEntry> entries =
         entryStore.loadAllEntries(null).stream()
-            .filter(e -> e.tags().stream().anyMatch(t -> t.equalsIgnoreCase(normalizedTag)))
+            .filter(e -> e.tagsMatching(tag))
+            .filter(e -> e.metaTagsMatching(metaTag))
             .filter(e -> dateFilter.test(e.startTime().toLocalDate()))
             .sorted(Comparator.comparing(TimeEntry::startTime))
             .toList();
 
     if (entries.isEmpty()) {
       System.out.printf(
-          "\n📭 No notes found for tag '%s'%s%n",
-          normalizedTag, (day != null ? " on " + day : (month != null ? " in " + month : "")));
+          "\n📭 No notes found for tag '%s', meta tag %s%s%n",
+          tag, metaTag, (day != null ? " on " + day : (month != null ? " in " + month : "")));
       return;
     }
 
     System.out.printf(
-        "\n📝 Notes for tag '%s'%s:%n%n",
-        normalizedTag, (day != null ? " on " + day : (month != null ? " in " + month : "")));
+        "\n📝 Notes for tag '%s', meta tag %s%s:%n%n",
+        tag, metaTag, (day != null ? " on " + day : (month != null ? " in " + month : "")));
 
     for (TimeEntry e : entries) {
       String time = e.startTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
