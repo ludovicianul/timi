@@ -135,37 +135,50 @@ public class AddCommand implements Runnable {
     if (interactive) {
       System.out.println("\n--- Interactive Entry Addition ---\n");
 
-      if (data.startTime == null) data.startTime = promptForDateTime(scanner);
-      else System.out.printf("Using provided start time: %s%n", data.startTime);
+      if (data.startTime == null) {
+        data.startTime = promptForDateTime(scanner);
+      } else {
+        System.out.printf("Using provided start time: %s%n", data.startTime);
+      }
 
-      if (data.durationMinutes == null) data.durationMinutes = promptForInteger(scanner);
-      else System.out.printf("Using provided duration: %d minutes%n", data.durationMinutes);
+      if (data.durationMinutes == null) {
+        data.durationMinutes = promptForInteger(scanner);
+      } else {
+        System.out.printf("Using provided duration: %d minutes%n", data.durationMinutes);
+      }
 
-      if (data.type == null || data.type.trim().isEmpty())
+      if (data.type == null || data.type.trim().isEmpty()) {
         data.type =
             promptForString(
                 scanner,
                 String.format("Activity type (options: %s)", configManager.getActivityTypes()),
                 configManager::isNotValidActivity);
-      else System.out.printf("Using provided activity type: %s%n", data.type);
+      } else {
+        System.out.printf("Using provided activity type: %s%n", data.type);
+      }
 
-      if (this.tags == null)
+      if (this.tags == null) {
         data.tags =
             promptForTags(scanner, String.format("Tags (options: %s)", configManager.getTags()));
-      else
+      } else {
         System.out.printf(
             "Using provided tags: %s%n",
             data.tags.isEmpty() ? "<none>" : String.join(",", data.tags));
-
-      if (this.note == null) data.note = promptForString(scanner, "Note", s -> false);
-      else
+      }
+      if (this.note == null) {
+        data.note = promptForString(scanner, "Note", s -> false);
+      } else {
         System.out.printf("Using provided note: %s%n", data.note.isEmpty() ? "<empty>" : data.note);
-
+      }
     } else {
-      if (data.startTime == null) data.startTime = LocalDateTime.now();
+      if (data.startTime == null) {
+        data.startTime = LocalDateTime.now();
+      }
     }
 
-    if (data.type != null) data.type = data.type.toLowerCase(Locale.ROOT);
+    if (data.type != null) {
+      data.type = data.type.toLowerCase(Locale.ROOT);
+    }
 
     return data;
   }

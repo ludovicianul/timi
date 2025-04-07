@@ -95,7 +95,9 @@ public class ConfigManager {
     }
 
     boolean removed = tags.remove(tag);
-    if (removed) save();
+    if (removed) {
+      save();
+    }
     return removed;
   }
 
@@ -114,7 +116,9 @@ public class ConfigManager {
     }
 
     boolean removed = activityTypes.remove(type);
-    if (removed) save();
+    if (removed) {
+      save();
+    }
     return removed;
   }
 

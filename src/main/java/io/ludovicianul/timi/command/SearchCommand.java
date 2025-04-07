@@ -73,10 +73,9 @@ public class SearchCommand implements Runnable {
                 e -> {
                   boolean tagMatch =
                       tagLower == null
-                          || e.tags().stream().anyMatch(t -> t.toLowerCase().contains(tagLower));
+                          || e.tags().stream().anyMatch(t -> t.equalsIgnoreCase(tagLower));
                   boolean activityMatch =
-                      activityLower == null
-                          || e.activityType().toLowerCase().contains(activityLower);
+                      activityLower == null || e.activityType().equalsIgnoreCase(activityLower);
                   boolean noteMatch =
                       noteLower == null
                           || (e.note() != null && e.note().toLowerCase().contains(noteLower));

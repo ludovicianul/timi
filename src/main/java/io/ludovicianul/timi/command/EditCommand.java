@@ -62,39 +62,6 @@ public class EditCommand implements Runnable {
       description = "Enable interactive editing mode (prompts for all fields).")
   private boolean interactive;
 
-  // Record to hold all entry field values
-  private record EntryFields(
-      LocalDateTime startTime,
-      Integer durationMinutes,
-      String note,
-      String activityType,
-      Set<String> tags) {
-
-    // Factory method to create from TimeEntry
-    static EntryFields from(TimeEntry entry) {
-      return new EntryFields(
-          entry.startTime(),
-          entry.durationMinutes(),
-          entry.note(),
-          entry.activityType(),
-          entry.tags());
-    }
-
-    // Format a field for display in comparisons
-    String formatStartTime() {
-      return startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-    }
-
-    // Check if equal to original entry
-    boolean isEqualTo(EntryFields other) {
-      return Objects.equals(startTime, other.startTime)
-          && Objects.equals(durationMinutes, other.durationMinutes)
-          && Objects.equals(note, other.note)
-          && Objects.equals(activityType, other.activityType)
-          && Objects.equals(tags, other.tags);
-    }
-  }
-
   @Override
   public void run() {
     Optional<TimeEntry> entryOpt = entryResolver.resolveEntry(id);
@@ -111,7 +78,7 @@ public class EditCommand implements Runnable {
         interactive ? runInteractive(originalFields) : runNonInteractive(originalFields);
 
     if (updatedFields == null) {
-      return; // Operation cancelled or no changes to make
+      return;
     }
 
     processUpdate(entryId, originalFields, updatedFields);
@@ -295,5 +262,34 @@ public class EditCommand implements Runnable {
     System.out.printf("%s [%s]: ", "Tags (comma-separated)", displayOriginal);
     String input = scanner.nextLine().trim();
     return input.isEmpty() ? originalValue : parseTags(input);
+  }
+
+  private record EntryFields(
+      LocalDateTime startTime,
+      Integer durationMinutes,
+      String note,
+      String activityType,
+      Set<String> tags) {
+
+    static EntryFields from(TimeEntry entry) {
+      return new EntryFields(
+          entry.startTime(),
+          entry.durationMinutes(),
+          entry.note(),
+          entry.activityType(),
+          entry.tags());
+    }
+
+    String formatStartTime() {
+      return startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+    }
+
+    boolean isEqualTo(EntryFields other) {
+      return Objects.equals(startTime, other.startTime)
+          && Objects.equals(durationMinutes, other.durationMinutes)
+          && Objects.equals(note, other.note)
+          && Objects.equals(activityType, other.activityType)
+          && Objects.equals(tags, other.tags);
+    }
   }
 }

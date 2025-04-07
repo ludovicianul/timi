@@ -23,7 +23,7 @@ public class BatchCommand implements Runnable {
 
   @Override
   public void run() {
-    System.out.println("Use a subcommand: batch-add or batch-delete");
+    System.out.println("Use a subcommand: batch add or batch delete");
   }
 
   @CommandLine.Command(
@@ -39,12 +39,13 @@ public class BatchCommand implements Runnable {
 
     @Override
     public void run() {
+      System.out.println(" ");
       try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
         String line;
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         while ((line = reader.readLine()) != null) {
-          // Skip header if present
-          if (line.startsWith("startTime") || line.isBlank()) continue;
+          if (line.startsWith("startTime") || line.isBlank()) {
+            continue;
+          }
           String[] parts = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
 
           for (int i = 0; i < parts.length; i++) {
@@ -95,12 +96,15 @@ public class BatchCommand implements Runnable {
 
     @Override
     public void run() {
+      System.out.println(" ");
       try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
         String line;
         int successCount = 0, failureCount = 0;
         while ((line = reader.readLine()) != null) {
           String id = line.trim();
-          if (id.isEmpty()) continue;
+          if (id.isEmpty()) {
+            continue;
+          }
           boolean deleted = entryStore.deleteById(UUID.fromString(id));
           if (deleted) {
             gitManager.commit("Batch deleted entry " + id);

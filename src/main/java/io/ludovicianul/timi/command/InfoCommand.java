@@ -17,13 +17,11 @@ public class InfoCommand implements Runnable {
   public void run() {
     System.out.println("\n📦 Timi CLI - Environment Info\n");
 
-    // App metadata
     System.out.println("🧩 Version:        " + VersionProvider.VERSION);
     System.out.println("🕒 Built at:       " + VersionProvider.DATE);
     System.out.println("📁 Config path:    ~/.timi/config.json");
     System.out.println("📁 Data path:      ~/.timi/entries/");
 
-    // Java & system info
     Properties props = System.getProperties();
     System.out.println(
         "\n🖥️ Java Runtime:   "
@@ -39,7 +37,6 @@ public class InfoCommand implements Runnable {
             + ")");
     System.out.println("🖥️ User:           " + props.getProperty("user.name"));
 
-    // Optional stats
     try (var paths = Files.list(Path.of(System.getProperty("user.home"), ".timi", "entries"))) {
       long entryCount =
           paths

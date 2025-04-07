@@ -80,6 +80,6 @@ public class NotesCommand implements Runnable {
       return null;
     }
 
-    return d -> true; // No filter applied
+    return d -> true;
   }
 }

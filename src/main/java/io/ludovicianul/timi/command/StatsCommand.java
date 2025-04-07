@@ -111,7 +111,6 @@ public class StatsCommand implements Runnable {
     }
     System.out.println();
 
-    // Print the summary table with the simplified format
     printSimplifiedSummaryTable(totals, totalMinutes, tagActivityMap, tagEntryCount);
 
     System.out.printf("\n🕒 Total Time: %s%n", formatMinutes(totalMinutes));
@@ -143,7 +142,6 @@ public class StatsCommand implements Runnable {
               .flatMap(m -> m.keySet().stream())
               .collect(Collectors.toCollection(TreeSet::new));
 
-      // Print the daily breakdown with the simplified format
       printSimplifiedBreakdownTable(byDay, allGroups);
     }
   }
@@ -154,7 +152,6 @@ public class StatsCommand implements Runnable {
       Map<String, Set<String>> tagActivityMap,
       Map<String, Integer> tagEntryCount) {
 
-    // Calculate column widths
     int groupWidth =
         Math.max(10, totals.keySet().stream().mapToInt(String::length).max().orElse(5));
     int timeWidth = 10;
@@ -162,7 +159,6 @@ public class StatsCommand implements Runnable {
     int typesWidth = 30;
     int entriesWidth = 7;
 
-    // Print header with simple format
     String headerFormat = "%-" + groupWidth + "s  %-" + timeWidth + "s  %-" + shareWidth + "s";
     if (groupBy == GroupBy.tag) {
       headerFormat += "  %-" + typesWidth + "s  %-" + entriesWidth + "s";
@@ -172,7 +168,6 @@ public class StatsCommand implements Runnable {
     }
     System.out.println();
 
-    // Print separator
     String separatorFormat = "%" + groupWidth + "s  %" + timeWidth + "s  %" + shareWidth + "s";
     if (groupBy == GroupBy.tag) {
       separatorFormat += "  %" + typesWidth + "s  %" + entriesWidth + "s";
@@ -189,7 +184,6 @@ public class StatsCommand implements Runnable {
     }
     System.out.println();
 
-    // Print data rows
     String rowFormat = "%-" + groupWidth + "s  %-" + timeWidth + "s  %" + shareWidth + ".1f%%";
     String tagRowFormat = rowFormat + "  %-" + typesWidth + "s  %-" + entriesWidth + "s";
 
@@ -222,29 +216,25 @@ public class StatsCommand implements Runnable {
       Map<LocalDate, Map<String, Integer>> byDay, Set<String> allGroups) {
     List<String> groupsList = new ArrayList<>(allGroups);
 
-    // Calculate column widths
-    int dateWidth = 10; // YYYY-MM-DD is 10 chars
+    int dateWidth = 10;
     Map<String, Integer> columnWidths = new HashMap<>();
     for (String group : groupsList) {
-      int width = Math.max(group.length(), 8); // At least 8 chars for time format
+      int width = Math.max(group.length(), 8);
       columnWidths.put(group, width);
     }
 
-    // Print header row
     System.out.printf("%-" + dateWidth + "s", "DATE");
     for (String group : groupsList) {
       System.out.printf("  %-" + columnWidths.get(group) + "s", group);
     }
     System.out.println();
 
-    // Print separator
     System.out.print("-".repeat(dateWidth));
     for (String group : groupsList) {
       System.out.print("  " + "-".repeat(columnWidths.get(group)));
     }
     System.out.println();
 
-    // Print data rows
     for (var dayEntry : byDay.entrySet()) {
       System.out.printf("%-" + dateWidth + "s", dayEntry.getKey());
 

@@ -102,7 +102,6 @@ public class ExportCommand implements Runnable {
 
   private void exportCSV(List<TimeEntry> entries) throws IOException {
     try (FileWriter writer = new FileWriter(outputPath)) {
-      // Write header
       writer.write("ID,Start Time,Duration,Activity Type,Tags,Note\n");
       DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
       for (TimeEntry e : entries) {
