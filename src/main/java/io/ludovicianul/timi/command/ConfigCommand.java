@@ -6,6 +6,7 @@ import io.ludovicianul.timi.command.config.ListConfigCommand;
 import io.ludovicianul.timi.command.config.PruneConfigCommand;
 import io.ludovicianul.timi.command.config.RemoveTagCommand;
 import io.ludovicianul.timi.command.config.RemoveTypeCommand;
+import io.ludovicianul.timi.command.config.SetSettingCommand;
 import io.ludovicianul.timi.command.config.ShowTagsCommand;
 import io.ludovicianul.timi.command.config.ShowTypesCommand;
 import io.ludovicianul.timi.command.config.ValidateConfigCommand;
@@ -24,7 +25,8 @@ import picocli.CommandLine;
       ShowTagsCommand.class,
       ShowTypesCommand.class,
       ValidateConfigCommand.class,
-      ListConfigCommand.class
+      ListConfigCommand.class,
+      SetSettingCommand.class
     })
 public class ConfigCommand implements Runnable {
   @Override
