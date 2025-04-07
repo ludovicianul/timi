@@ -26,7 +26,7 @@ public class EditCommand implements Runnable {
   @Inject EntryResolver entryResolver;
 
   @CommandLine.Option(
-      names = {"--id", "-i"},
+      names = {"--id"},
       description = "ID of the entry to edit.",
       required = true)
   private String id;
@@ -58,7 +58,7 @@ public class EditCommand implements Runnable {
   private List<String> tags;
 
   @CommandLine.Option(
-      names = {"--interactive"},
+      names = {"--interactive", "-i"},
       description = "Enable interactive editing mode (prompts for all fields).")
   private boolean interactive;
 
