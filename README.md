@@ -12,7 +12,7 @@ who prefer flexibility, transparency, and full ownership of their data.
 #### Option 1: Homebrew (macOS)
 
 ```bash
-brew install ludovicianul/tap/sol
+brew install ludovicianul/tap/timi
 ```
 
 #### Option2: Build from sources
@@ -71,6 +71,8 @@ timi add --interactive
 
 Run `timi [command] --help` for details.
 
+More details here: [COMMANDS.md](./docs/COMMANDS.md)
+
 ---
 
 ## 🎨 Shell Autocomplete
@@ -117,6 +119,7 @@ timi analyze --context-switch --by week
 timi index rebuild
 ```
 
+More examples here: [EXAMPLES.md](./docs/EXAMPLES.md)
 ---
 
 ## 🛠 Requirements
