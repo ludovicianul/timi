@@ -1,5 +1,7 @@
 package io.ludovicianul.timi.git;
 
+import io.ludovicianul.timi.config.ConfigManager;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class GitManager {
   private final File repoDir = new File(System.getProperty("user.home"), ".timi");
+  @Inject ConfigManager configManager;
 
   public GitManager() {
     try {
@@ -23,8 +26,10 @@ public class GitManager {
 
   public void commit(String message) {
     try {
-      executeGitCommand(List.of("add", "."));
-      executeGitCommand(List.of("commit", "-m", message));
+      if (configManager.isGitEnabled()) {
+        executeGitCommand(List.of("add", "."));
+        executeGitCommand(List.of("commit", "-m", message));
+      }
     } catch (Exception e) {
       throw new RuntimeException("Git commit failed", e);
     }

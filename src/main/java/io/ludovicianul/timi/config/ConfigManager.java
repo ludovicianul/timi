@@ -1,8 +1,7 @@
 package io.ludovicianul.timi.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.ludovicianul.timi.persistence.EntryStore;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -10,48 +9,36 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Scanner;
 import java.util.Set;
 
 @Singleton
 public class ConfigManager {
-  private Set<String> activityTypes = Set.of();
-  private Set<String> tags = Set.of();
   private final Path configPath = Path.of(System.getProperty("user.home"), ".timi", "config.json");
+  private final ObjectMapper mapper = new ObjectMapper();
+
+  private final ConfigData config;
 
   @Inject EntryStore entryStore;
 
   public ConfigManager() {
-    load();
-  }
-
-  public void load() {
     try {
-      if (!Files.exists(configPath)) {
-        Files.createDirectories(configPath.getParent());
-        Files.writeString(
-            configPath,
-            """
-                {
-                  "activityTypes": ["work", "meeting", "prep"],
-                  "tags": ["general"]
-                }""");
+      if (Files.exists(configPath)) {
+        config = mapper.readValue(configPath.toFile(), ConfigData.class);
+      } else {
+        config = new ConfigData();
+        config.tags.add("general");
+        config.types.addAll(Set.of("work", "meeting", "prep"));
+        save();
       }
-      var json = new ObjectMapper().readTree(configPath.toFile());
-      activityTypes = new HashSet<>();
-      tags = new HashSet<>();
-      json.get("activityTypes")
-          .forEach(v -> activityTypes.add(v.asText().toLowerCase(Locale.ROOT)));
-      json.get("tags").forEach(v -> tags.add(v.asText().toLowerCase(Locale.ROOT)));
     } catch (IOException e) {
-      throw new RuntimeException("Failed to load config.json", e);
+      throw new RuntimeException("Failed to load config", e);
     }
   }
 
   public boolean addTag(String tag) {
-    if (!tags.contains(tag)) {
-      tags.add(tag);
+    if (!config.tags.contains(tag)) {
+      config.tags.add(tag);
       save();
       return true;
     }
@@ -59,24 +46,12 @@ public class ConfigManager {
   }
 
   public boolean addActivityType(String type) {
-    if (!activityTypes.contains(type)) {
-      activityTypes.add(type);
+    if (!config.types.contains(type)) {
+      config.types.add(type);
       save();
       return true;
     }
     return false;
-  }
-
-  private void save() {
-    ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-    ObjectNode root = mapper.createObjectNode();
-    root.putPOJO("activityTypes", activityTypes);
-    root.putPOJO("tags", tags);
-    try {
-      mapper.writeValue(configPath.toFile(), root);
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to save config", e);
-    }
   }
 
   public boolean removeTag(String tag) {
@@ -94,7 +69,7 @@ public class ConfigManager {
       }
     }
 
-    boolean removed = tags.remove(tag);
+    boolean removed = config.tags.remove(tag);
     if (removed) {
       save();
     }
@@ -115,26 +90,80 @@ public class ConfigManager {
       }
     }
 
-    boolean removed = activityTypes.remove(type);
+    boolean removed = config.types.remove(type);
     if (removed) {
       save();
     }
     return removed;
   }
 
-  public boolean isNotValidActivity(String value) {
-    return !activityTypes.contains(value);
-  }
-
-  public boolean isNotValidTag(String tag) {
-    return !tags.contains(tag);
-  }
-
-  public Set<String> getActivityTypes() {
-    return activityTypes;
+  public void save() {
+    try {
+      mapper.writerWithDefaultPrettyPrinter().writeValue(configPath.toFile(), config);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to save config", e);
+    }
   }
 
   public Set<String> getTags() {
-    return tags;
+    return config.tags;
+  }
+
+  public Set<String> getActivityTypes() {
+    return config.types;
+  }
+
+  public boolean isNotValidTag(String tag) {
+    return !config.tags.contains(tag.toLowerCase());
+  }
+
+  public boolean isNotValidActivity(String activityType) {
+    return !config.types.contains(activityType.toLowerCase());
+  }
+
+  public boolean isGitEnabled() {
+    return config.gitEnabled;
+  }
+
+  public void setGitEnabled(boolean enabled) {
+    config.gitEnabled = enabled;
+    save();
+  }
+
+  public int getDeepWorkValue() {
+    return config.deepWorkValue;
+  }
+
+  public void setDeepWorkValue(int value) {
+    config.deepWorkValue = value;
+    save();
+  }
+
+  public int getFocusedWorkValue() {
+    return config.focusedWorkValue;
+  }
+
+  public void setFocusedWorkValue(int value) {
+    config.focusedWorkValue = value;
+    save();
+  }
+
+  public void setColorOutput(boolean enabled) {
+    config.colorOutput = enabled;
+    save();
+  }
+
+  public boolean isColorOutput() {
+    return config.colorOutput;
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class ConfigData {
+    public Set<String> tags = new HashSet<>();
+    public Set<String> types = new HashSet<>();
+    public boolean gitEnabled = true;
+    public boolean colorOutput = false;
+    public int deepWorkValue = 2;
+    public int focusedWorkValue = 3;
   }
 }

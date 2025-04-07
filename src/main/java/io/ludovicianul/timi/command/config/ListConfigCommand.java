@@ -6,7 +6,7 @@ import picocli.CommandLine;
 
 @CommandLine.Command(
     name = "list",
-    description = "List configured activity types and tags",
+    description = "List configured activity types and tags and advanced configuration",
     mixinStandardHelpOptions = true)
 public class ListConfigCommand implements Runnable {
   @Inject ConfigManager configManager;
@@ -18,5 +18,11 @@ public class ListConfigCommand implements Runnable {
 
     System.out.println("\n🏷  Configured Tags:");
     configManager.getTags().forEach(tag -> System.out.println("  • " + tag));
+
+    System.out.println("\n⚙️  Advanced Settings:");
+    System.out.println("  • gitEnabled: " + configManager.isGitEnabled());
+    System.out.println("  • deepWorkValue: " + configManager.getDeepWorkValue());
+    System.out.println("  • focusedWorkValue: " + configManager.getFocusedWorkValue());
+    System.out.println("  • colorOutput: " + configManager.isColorOutput());
   }
 }

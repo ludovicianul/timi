@@ -2,6 +2,7 @@ package io.ludovicianul.timi.command;
 
 import static io.ludovicianul.timi.util.Utils.formatMinutes;
 
+import io.ludovicianul.timi.console.Ansi;
 import io.ludovicianul.timi.persistence.EntryStore;
 import io.ludovicianul.timi.persistence.TimeEntry;
 import jakarta.inject.Inject;
@@ -59,6 +60,7 @@ public class ListCommand implements Runnable {
   CountMode countMode;
 
   @Inject EntryStore entryStore;
+  @Inject Ansi ansi;
 
   @Override
   public void run() {
@@ -95,7 +97,7 @@ public class ListCommand implements Runnable {
                 .sum();
 
         String totalFormatted = String.format("%dh %02dm", totalMinutes / 60, totalMinutes % 60);
-        System.out.printf("📅 %s (Total: %s)%n", entryDate, totalFormatted);
+        System.out.printf(ansi.cyan("📅 %s (Total: %s)%n"), entryDate, totalFormatted);
         System.out.println("-".repeat(30));
         lastDate = entryDate;
       }

@@ -2,6 +2,7 @@ package io.ludovicianul.timi.command;
 
 import static io.ludovicianul.timi.util.Utils.formatMinutes;
 
+import io.ludovicianul.timi.config.ConfigManager;
 import io.ludovicianul.timi.persistence.EntryStore;
 import io.ludovicianul.timi.persistence.TimeEntry;
 import jakarta.inject.Inject;
@@ -37,6 +38,7 @@ public class AnalyzeCommand implements Runnable {
   boolean dowInsights;
 
   @Inject EntryStore entryStore;
+  @Inject ConfigManager configManager;
 
   enum SplitBy {
     day,
@@ -212,13 +214,18 @@ public class AnalyzeCommand implements Runnable {
       int total = logs.stream().mapToInt(TimeEntry::durationMinutes).sum();
 
       String profile =
-          uniqueTypes.size() == 2
+          uniqueTypes.size() <= configManager.getDeepWorkValue()
               ? "🔵 Deep Work"
-              : uniqueTypes.size() <= 3 ? "🟡 Focused" : "🔴 Context Switching";
+              : uniqueTypes.size() <= configManager.getFocusedWorkValue()
+                  ? "🟡 Focused"
+                  : "🔴 Context Switching";
       System.out.printf("%s → %s (%s)%n", date, profile, formatMinutes(total));
     }
-    System.out.println(
-        "\n🔵 Deep Work = 2 types; 🟡 Focused = 3 types; 🔴 Context Switching > 3 types");
+    System.out.printf(
+        "%n🔵 Deep Work <= %s types; 🟡 Focused <= %s types; 🔴 Context Switching > %s types",
+        configManager.getDeepWorkValue(),
+        configManager.getFocusedWorkValue(),
+        configManager.getFocusedWorkValue());
   }
 
   private void analyzeDayOfWeekInsights(List<TimeEntry> entries) {
