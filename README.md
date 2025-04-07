@@ -11,6 +11,10 @@ who prefer flexibility, transparency, and full ownership of their data.
 
 #### Option 1: Homebrew (macOS)
 
+```bash
+brew install ludovicianul/tap/sol
+```
+
 #### Option2: Build from sources
 
 ```bash
