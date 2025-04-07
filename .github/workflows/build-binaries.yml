@@ -86,7 +86,7 @@ jobs:
 
       - name: Tar files for Linux arm64
         run: |
-          cp target/timirunner timi
+          cp target/timi-runner timi
           tar -czf timi_linux_arm64_${{ github.event.inputs.releaseversion }}.tar.gz timi
 
       - name: Upload Tar files for Linux arm64
