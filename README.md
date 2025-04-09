@@ -28,7 +28,8 @@ Optional (native build):
 
 ```bash
 ./mvnw package -Pnative
-./target/timi --help
+cp target/timi-runner timi
+./timi --help
 ```
 
 ---
@@ -120,13 +121,14 @@ timi index rebuild
 ```
 
 More examples here: [EXAMPLES.md](./docs/EXAMPLES.md)
+
 ---
 
 ## 🛠 Requirements
 
-- Java 17+
+- Java 21+ (if using uberjar)
 - Maven (for building)
-- Optional: GraalVM for native image support
+- Optional: GraalVM for native image build
 
 ---
 
