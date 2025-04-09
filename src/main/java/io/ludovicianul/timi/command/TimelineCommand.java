@@ -2,6 +2,7 @@ package io.ludovicianul.timi.command;
 
 import static io.ludovicianul.timi.util.Utils.*;
 
+import io.ludovicianul.timi.console.Ansi;
 import io.ludovicianul.timi.persistence.EntryStore;
 import io.ludovicianul.timi.persistence.TimeEntry;
 import jakarta.inject.Inject;
@@ -25,6 +26,12 @@ public class TimelineCommand implements Runnable {
     month
   }
 
+  enum GroupBy {
+    tag,
+    metaTag,
+    type
+  }
+
   @CommandLine.Option(names = "--from", required = true, description = "Start date (yyyy-MM-dd)")
   LocalDate from;
 
@@ -38,12 +45,24 @@ public class TimelineCommand implements Runnable {
   ViewMode viewMode;
 
   @CommandLine.Option(
+      names = "--group-by",
+      defaultValue = "type",
+      description = "Group by 'tag', 'metaTag', or 'type'")
+  GroupBy groupBy;
+
+  @CommandLine.Option(
+      names = "--only",
+      description = "Only show chart for the specified tag/type/metaTag")
+  String only;
+
+  @CommandLine.Option(
       names = "--chart-width",
       defaultValue = "30",
       description = "Width of the bar chart (number of characters)")
   int chartWidth;
 
   @Inject EntryStore entryStore;
+  @Inject Ansi ansi;
 
   @Override
   public void run() {
@@ -77,11 +96,12 @@ public class TimelineCommand implements Runnable {
               LocalDate d = e.startTime().toLocalDate();
               return !d.isBefore(from) && !d.isAfter(to);
             })
-        .collect(Collectors.toList());
+        .toList();
   }
 
   private Map<String, Integer> aggregateByDay(List<TimeEntry> entries) {
     return entries.stream()
+        .filter(this::matchesOnlyFilter)
         .collect(
             Collectors.groupingBy(
                 e -> e.startTime().toLocalDate().toString(),
@@ -92,6 +112,7 @@ public class TimelineCommand implements Runnable {
   private Map<String, Integer> aggregateByWeek(List<TimeEntry> entries) {
     WeekFields wf = WeekFields.ISO;
     return entries.stream()
+        .filter(this::matchesOnlyFilter)
         .collect(
             Collectors.groupingBy(
                 e -> {
@@ -106,6 +127,7 @@ public class TimelineCommand implements Runnable {
 
   private Map<String, Integer> aggregateByMonth(List<TimeEntry> entries) {
     return entries.stream()
+        .filter(this::matchesOnlyFilter)
         .collect(
             Collectors.groupingBy(
                 e -> YearMonth.from(e.startTime()).toString(),
@@ -113,16 +135,28 @@ public class TimelineCommand implements Runnable {
                 Collectors.summingInt(TimeEntry::durationMinutes)));
   }
 
+  private boolean matchesOnlyFilter(TimeEntry entry) {
+    if (only == null || only.isBlank()) return true;
+    return switch (groupBy) {
+      case type -> entry.activityType().equalsIgnoreCase(only);
+      case tag -> entry.tags().stream().anyMatch(t -> t.equalsIgnoreCase(only));
+      case metaTag -> entry.metaTags().stream().anyMatch(t -> t.equalsIgnoreCase(only));
+    };
+  }
+
   private void printBarChart(Map<String, Integer> aggregatedData) {
     int maxMinutes = aggregatedData.values().stream().max(Integer::compareTo).orElse(1);
     System.out.println("\n📊 Aggregated Timeline (" + viewMode + ")");
+    if (only != null && !only.isBlank()) {
+      System.out.printf("🔎 Focus: %s\n", ansi.cyan(only));
+    }
     System.out.println("=".repeat(80));
 
     aggregatedData.forEach(
         (period, minutes) -> {
           String bar = "█".repeat(scale(minutes, maxMinutes));
-          System.out.printf(
-              "%-15s | %-" + chartWidth + "s (%s)%n", period, bar, formatMinutes(minutes));
+          String label = (only != null && !only.isBlank()) ? ansi.green(bar) : bar;
+          System.out.printf("%-15s | %s (%s)%n", period, label, formatMinutes(minutes));
         });
 
     System.out.println("=".repeat(80));
