@@ -178,6 +178,9 @@ function _complete_timi() {
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} config show-types" ];    then _picocli_timi_config; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} config validate" ];    then _picocli_timi_config; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} config list" ];    then _picocli_timi_config; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} config set" ];    then _picocli_timi_config; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} config add-meta-tag" ];    then _picocli_timi_config; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} config show-meta-tags" ];    then _picocli_timi_config; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} index rebuild" ];    then _picocli_timi_index; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} index validate" ];    then _picocli_timi_index; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} index show" ];    then _picocli_timi_index; return $?; fi
@@ -209,17 +212,23 @@ function _complete_timi() {
   local cmds21=(config show-types)
   local cmds22=(config validate)
   local cmds23=(config list)
-  local cmds24=(index rebuild)
-  local cmds25=(index validate)
-  local cmds26=(index show)
-  local cmds27=(batch add)
-  local cmds28=(batch delete)
+  local cmds24=(config set)
+  local cmds25=(config add-meta-tag)
+  local cmds26=(config show-meta-tags)
+  local cmds27=(index rebuild)
+  local cmds28=(index validate)
+  local cmds29=(index show)
+  local cmds30=(batch add)
+  local cmds31=(batch delete)
 
-  if CompWordsContainsArray "${cmds28[@]}"; then _picocli_timi_batch_delete; return $?; fi
-  if CompWordsContainsArray "${cmds27[@]}"; then _picocli_timi_batch_add; return $?; fi
-  if CompWordsContainsArray "${cmds26[@]}"; then _picocli_timi_index_show; return $?; fi
-  if CompWordsContainsArray "${cmds25[@]}"; then _picocli_timi_index_validate; return $?; fi
-  if CompWordsContainsArray "${cmds24[@]}"; then _picocli_timi_index_rebuild; return $?; fi
+  if CompWordsContainsArray "${cmds31[@]}"; then _picocli_timi_batch_delete; return $?; fi
+  if CompWordsContainsArray "${cmds30[@]}"; then _picocli_timi_batch_add; return $?; fi
+  if CompWordsContainsArray "${cmds29[@]}"; then _picocli_timi_index_show; return $?; fi
+  if CompWordsContainsArray "${cmds28[@]}"; then _picocli_timi_index_validate; return $?; fi
+  if CompWordsContainsArray "${cmds27[@]}"; then _picocli_timi_index_rebuild; return $?; fi
+  if CompWordsContainsArray "${cmds26[@]}"; then _picocli_timi_config_showmetatags; return $?; fi
+  if CompWordsContainsArray "${cmds25[@]}"; then _picocli_timi_config_addmetatag; return $?; fi
+  if CompWordsContainsArray "${cmds24[@]}"; then _picocli_timi_config_set; return $?; fi
   if CompWordsContainsArray "${cmds23[@]}"; then _picocli_timi_config_list; return $?; fi
   if CompWordsContainsArray "${cmds22[@]}"; then _picocli_timi_config_validate; return $?; fi
   if CompWordsContainsArray "${cmds21[@]}"; then _picocli_timi_config_showtypes; return $?; fi
@@ -275,7 +284,7 @@ function _picocli_timi_add() {
 
   local commands=""
   local flag_opts="--interactive -i -h --help -V --version"
-  local arg_opts="--start -s --duration -d --type -t --tags --tag --note -n"
+  local arg_opts="--start -s --duration -d --type -t --tags --tag --meta-tags --meta-tag --note -n"
 
   type compopt &>/dev/null && compopt +o default
 
@@ -290,6 +299,9 @@ function _picocli_timi_add() {
       return
       ;;
     --tags|--tag)
+      return
+      ;;
+    --meta-tags|--meta-tag)
       return
       ;;
     --note|-n)
@@ -311,7 +323,7 @@ function _picocli_timi_config() {
   # Get completion data
   local curr_word=${COMP_WORDS[COMP_CWORD]}
 
-  local commands="add-tag add-type prune remove-type remove-tag show-tags show-types validate list"
+  local commands="add-tag add-type prune remove-type remove-tag show-tags show-types validate list set add-meta-tag show-meta-tags"
   local flag_opts="-h --help -V --version"
   local arg_opts=""
 
@@ -358,13 +370,13 @@ function _picocli_timi_edit() {
   local prev_word=${COMP_WORDS[COMP_CWORD-1]}
 
   local commands=""
-  local flag_opts="--interactive -h --help -V --version"
-  local arg_opts="--id -i --start -s --duration -d --note -n --type -t --tags -tag"
+  local flag_opts="--interactive -i -h --help -V --version"
+  local arg_opts="--id --start -s --duration -d --note -n --type -t --tags -tag --meta-tags -meta-tag"
 
   type compopt &>/dev/null && compopt +o default
 
   case ${prev_word} in
-    --id|-i)
+    --id)
       return
       ;;
     --start|-s)
@@ -380,6 +392,9 @@ function _picocli_timi_edit() {
       return
       ;;
     --tags|-tag)
+      return
+      ;;
+    --meta-tags|-meta-tag)
       return
       ;;
   esac
@@ -400,8 +415,8 @@ function _picocli_timi_list() {
   local prev_word=${COMP_WORDS[COMP_CWORD-1]}
 
   local commands=""
-  local flag_opts="--today --show-tags --show-ids -h --help -V --version"
-  local arg_opts="--month -m --from --day --to --only-tag --count-mode"
+  local flag_opts="--today --show-tags --show-meta-tags --show-ids -h --help -V --version"
+  local arg_opts="--month -m --from --day --to --only-tag --only-meta-tag --count-mode"
   local countMode_option_args=("full" "split") # --count-mode values
 
   type compopt &>/dev/null && compopt +o default
@@ -420,6 +435,9 @@ function _picocli_timi_list() {
       return
       ;;
     --only-tag)
+      return
+      ;;
+    --only-meta-tag)
       return
       ;;
     --count-mode)
@@ -491,12 +509,15 @@ function _picocli_timi_notes() {
 
   local commands=""
   local flag_opts="-h --help -V --version"
-  local arg_opts="--tag --month --day"
+  local arg_opts="--tag --meta-tag --month --day"
 
   type compopt &>/dev/null && compopt +o default
 
   case ${prev_word} in
     --tag)
+      return
+      ;;
+    --meta-tag)
       return
       ;;
     --month)
@@ -524,12 +545,15 @@ function _picocli_timi_search() {
 
   local commands=""
   local flag_opts="--summary -h --help -V --version"
-  local arg_opts="--tag --type --note --from --to"
+  local arg_opts="--tag --meta-tag --type --note --from --to"
 
   type compopt &>/dev/null && compopt +o default
 
   case ${prev_word} in
     --tag)
+      return
+      ;;
+    --meta-tag)
       return
       ;;
     --type)
@@ -671,7 +695,7 @@ function _picocli_timi_export() {
 
   local commands=""
   local flag_opts="-h --help -V --version"
-  local arg_opts="--format -f --from --to --type -t --tags --tag --output -o"
+  local arg_opts="--format -f --from --to --type -t --tags --tag --meta-tags --meta-tag --output -o"
   local format_option_args=("csv" "json") # --format values
 
   type compopt &>/dev/null && compopt +o default
@@ -692,6 +716,9 @@ function _picocli_timi_export() {
       return
       ;;
     --tags|--tag)
+      return
+      ;;
+    --meta-tags|--meta-tag)
       return
       ;;
     --output|-o)
@@ -926,6 +953,75 @@ function _picocli_timi_config_validate() {
 
 # Generates completions for the options and subcommands of the `list` subcommand.
 function _picocli_timi_config_list() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+
+  local commands=""
+  local flag_opts="-h --help -V --version"
+  local arg_opts=""
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `set` subcommand.
+function _picocli_timi_config_set() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+
+  local commands=""
+  local flag_opts="-h --help -V --version"
+  local arg_opts=""
+  local key_pos_param_args=("gitEnabled" "deepWorkValue" "focusedWorkValue" "colorOutput") # 0-0 values
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local currIndex
+    currIndex=$(currentPositionalIndex "set" "${arg_opts}" "${flag_opts}")
+    if (( currIndex >= 0 && currIndex <= 0 )); then
+      positionals=$( compReplyArray "${key_pos_param_args[@]}" )
+    fi
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `add-meta-tag` subcommand.
+function _picocli_timi_config_addmetatag() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+  local prev_word=${COMP_WORDS[COMP_CWORD-1]}
+
+  local commands=""
+  local flag_opts="-h --help -V --version"
+  local arg_opts="--name -n"
+
+  type compopt &>/dev/null && compopt +o default
+
+  case ${prev_word} in
+    --name|-n)
+      return
+      ;;
+  esac
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `show-meta-tags` subcommand.
+function _picocli_timi_config_showmetatags() {
   # Get completion data
   local curr_word=${COMP_WORDS[COMP_CWORD]}
 

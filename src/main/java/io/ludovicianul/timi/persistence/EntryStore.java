@@ -194,9 +194,7 @@ public class EntryStore {
     // If the file is unchanged, just replace it in place
     if (newFile.equals(currentFile)) {
       List<TimeEntry> updated =
-          currentEntries.stream()
-              .map(e -> e.id().equals(id) ? updatedEntry : e)
-              .collect(Collectors.toList());
+          currentEntries.stream().map(e -> e.id().equals(id) ? updatedEntry : e).toList();
       saveToFile(currentFile, updated);
       return true;
     }
