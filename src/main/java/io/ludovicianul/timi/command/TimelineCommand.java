@@ -127,7 +127,7 @@ public class TimelineCommand implements Runnable {
 
     List<Integer> colorCodes =
         List.of(
-            160, 33, 118, 220, 141, 39, 203, 75, 208, 45, 93, 99, 129, 69, 214, 186, 123, 105, 33,
+            160, 33, 118, 220, 141, 39, 203, 150, 240, 45, 93, 99, 129, 69, 214, 186, 123, 105, 33,
             27, 36, 84, 124, 203, 229);
     Map<String, String> colorMap = new HashMap<>();
     int colorIndex = 0;
@@ -153,9 +153,30 @@ public class TimelineCommand implements Runnable {
       int total = values.values().stream().mapToInt(Integer::intValue).sum();
 
       StringBuilder bar = new StringBuilder();
-      for (var k : values.entrySet()) {
-        int segment = scale(k.getValue(), maxMinutes);
-        bar.append(colorMap.get(k.getKey()).repeat(segment));
+      int barLength = scale(total, maxMinutes);
+      int totalAdded = 0;
+      Map<String, Integer> sliceLengths = new LinkedHashMap<>();
+
+      for (var part : values.entrySet()) {
+        int len = (int) Math.round((part.getValue() / (double) total) * barLength);
+        if (part.getValue() > 0 && len == 0) len = 1;
+        sliceLengths.put(part.getKey(), len);
+        totalAdded += len;
+      }
+
+      while (totalAdded > barLength) {
+        String last = sliceLengths.keySet().stream().reduce((a, b) -> b).orElse(null);
+        sliceLengths.computeIfPresent(last, (k, v) -> v > 1 ? v - 1 : v);
+        totalAdded--;
+      }
+      while (totalAdded < barLength) {
+        String first = sliceLengths.keySet().stream().findFirst().orElse(null);
+        sliceLengths.computeIfPresent(first, (k, v) -> v + 1);
+        totalAdded++;
+      }
+
+      for (var e : sliceLengths.entrySet()) {
+        bar.append(colorMap.get(e.getKey()).repeat(e.getValue()));
       }
 
       System.out.printf("%-15s | %s (%s)%n", period, bar.toString(), formatMinutes(total));
