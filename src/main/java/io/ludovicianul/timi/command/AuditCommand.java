@@ -23,12 +23,6 @@ public class AuditCommand implements Runnable {
   @Option(names = "--to", required = true, description = "End date (yyyy-MM-dd)")
   LocalDate to;
 
-  @Option(
-      names = "--short-duration",
-      description = "Flag entries shorter than N minutes",
-      defaultValue = "10")
-  int shortDurationThreshold;
-
   @Option(names = "--empty-notes", description = "Flag entries with empty or missing notes")
   boolean checkEmptyNotes = true;
 
@@ -72,7 +66,7 @@ public class AuditCommand implements Runnable {
     Map<String, Set<String>> tagToTypes = new HashMap<>();
 
     for (TimeEntry e : entries) {
-      if (e.durationMinutes() < shortDurationThreshold) {
+      if (e.durationMinutes() < configManager.getShortDurationThreshold()) {
         flaggedShort++;
       }
       if (checkEmptyNotes && (e.note() == null || e.note().trim().isEmpty())) {
@@ -92,7 +86,8 @@ public class AuditCommand implements Runnable {
     long total = entries.size();
 
     System.out.printf("• Entries analyzed: %d%n", total);
-    System.out.printf("• Short durations (<%dm): %d%n", shortDurationThreshold, flaggedShort);
+    System.out.printf(
+        "• Short durations (<%dm): %d%n", configManager.getShortDurationThreshold(), flaggedShort);
     System.out.printf("• Empty notes: %d%n", flaggedEmptyNotes);
     System.out.printf("• Odd durations: %d%n", flaggedOddDurations);
 
@@ -128,11 +123,12 @@ public class AuditCommand implements Runnable {
       boolean found = false;
 
       for (TimeEntry e : entries) {
-        if (e.durationMinutes() < shortDurationThreshold
+        if (e.durationMinutes() < configManager.getShortDurationThreshold()
             || (checkEmptyNotes && (e.note() == null || e.note().trim().isEmpty()))
             || (checkOddDurations && isOddDuration(e))) {
           System.out.printf(
-              "[%s] %s (%s) → %s%n",
+              "%s [%s] %s (%s) → %s%n",
+              e.id(),
               e.startTime(),
               formatMinutes(e.durationMinutes()),
               e.activityType(),

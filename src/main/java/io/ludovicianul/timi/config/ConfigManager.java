@@ -166,6 +166,15 @@ public class ConfigManager {
     return config.colorOutput;
   }
 
+  public int getShortDurationThreshold() {
+    return config.shortDurationThreshold;
+  }
+
+  public void setShortDurationThreshold(int value) {
+    config.shortDurationThreshold = value;
+    save();
+  }
+
   public boolean addMetaTag(String normalizedName) {
     if (!config.metaTags.contains(normalizedName)) {
       config.metaTags.add(normalizedName);
@@ -184,5 +193,6 @@ public class ConfigManager {
     public boolean colorOutput = false;
     public int deepWorkValue = 2;
     public int focusedWorkValue = 3;
+    public int shortDurationThreshold = 10;
   }
 }
