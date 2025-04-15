@@ -25,6 +25,8 @@ import java.util.stream.Stream;
 public class EntryStore {
   private final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
   private final Path baseDir = Path.of(System.getProperty("user.home"), ".timi", "entries");
+  private final Path lastActionFile =
+      Path.of(System.getProperty("user.home"), ".timi", "history", "last-action.json");
 
   private final Map<UUID, String> index = new HashMap<>();
   private final Path indexFile = baseDir.resolve("index.json");
@@ -36,6 +38,14 @@ public class EntryStore {
 
   public Map<UUID, String> getIndex() {
     return index;
+  }
+
+  public UndoAction getLastAction() {
+    try {
+      return mapper.readValue(lastActionFile.toFile(), UndoAction.class);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public void loadIndex() {
@@ -153,6 +163,7 @@ public class EntryStore {
       mapper.writerWithDefaultPrettyPrinter().writeValue(file.toFile(), entries);
       index.put(entry.id(), file.getFileName().toString());
       saveIndex();
+      recordUndo("add", null, entry);
     } catch (IOException e) {
       throw new RuntimeException("Failed to save entry", e);
     }
@@ -168,7 +179,9 @@ public class EntryStore {
       Set<String> newMetaTags) {
 
     String currentFileName = index.get(id);
-    if (currentFileName == null) return false;
+    if (currentFileName == null) {
+      return false;
+    }
 
     Path currentFile = baseDir.resolve(currentFileName);
     List<TimeEntry> currentEntries = loadFromFile(currentFile);
@@ -176,7 +189,9 @@ public class EntryStore {
     TimeEntry existing =
         currentEntries.stream().filter(e -> e.id().equals(id)).findFirst().orElse(null);
 
-    if (existing == null) return false;
+    if (existing == null) {
+      return false;
+    }
 
     // Build updated entry
     TimeEntry updatedEntry =
@@ -196,6 +211,7 @@ public class EntryStore {
       List<TimeEntry> updated =
           currentEntries.stream().map(e -> e.id().equals(id) ? updatedEntry : e).toList();
       saveToFile(currentFile, updated);
+      recordUndo("edit", existing, updatedEntry);
       return true;
     }
 
@@ -216,17 +232,21 @@ public class EntryStore {
 
   public boolean deleteById(UUID id) {
     String fileName = index.get(id);
-    if (fileName == null) return false;
+    if (fileName == null) {
+      return false;
+    }
 
     Path file = baseDir.resolve(fileName);
     List<TimeEntry> entries = loadFromFile(file);
-    boolean removed = entries.removeIf(e -> e.id().equals(id));
-    if (removed) {
+    Optional<TimeEntry> toRemove = entries.stream().filter(e -> e.id().equals(id)).findFirst();
+    if (toRemove.isPresent()) {
+      entries.remove(toRemove.get());
       saveToFile(file, entries);
       index.remove(id);
       saveIndex();
+      recordUndo("delete", toRemove.get(), null);
     }
-    return removed;
+    return toRemove.isPresent();
   }
 
   public List<TimeEntry> loadFromFile(Path file) {
@@ -280,6 +300,20 @@ public class EntryStore {
           .toList();
     } catch (IOException e) {
       throw new RuntimeException("Failed to list entry files in " + baseDir, e);
+    }
+  }
+
+  private void recordUndo(String action, TimeEntry entryBefore, TimeEntry entryAfter) {
+    try {
+      Path historyDir = Path.of(System.getProperty("user.home"), ".timi", "history");
+      Files.createDirectories(historyDir);
+      Path file = historyDir.resolve("last-action.json");
+
+      UndoAction undo = new UndoAction(action, LocalDateTime.now(), entryBefore, entryAfter);
+
+      mapper.writerWithDefaultPrettyPrinter().writeValue(file.toFile(), undo);
+    } catch (IOException e) {
+      System.err.println("❌ Failed to record undo action: " + e.getMessage());
     }
   }
 }
