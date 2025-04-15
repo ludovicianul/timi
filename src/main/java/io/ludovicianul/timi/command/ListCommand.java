@@ -40,6 +40,9 @@ public class ListCommand implements Runnable {
   @CommandLine.Option(names = "--today", description = "List entries for today only")
   boolean today;
 
+  @CommandLine.Option(names = "--yesterday", description = "List entries for yesterday only")
+  boolean yesterday;
+
   @CommandLine.Option(
       names = "--only-tag",
       description = "Show only entries with this tag (case-insensitive)")
@@ -89,6 +92,22 @@ public class ListCommand implements Runnable {
     LocalDate lastDate = null;
     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
+    int tagColumnWidth =
+        entries.stream()
+                .mapToInt(
+                    e -> {
+                      if (showTags && !e.tags().isEmpty()) {
+                        return String.join(", ", e.tags()).length();
+                      } else if (showMetaTags && !e.metaTags().isEmpty()) {
+                        return String.join(", ", e.metaTags()).length();
+                      } else {
+                        return 0;
+                      }
+                    })
+                .max()
+                .orElse(0)
+            + 2;
+
     for (TimeEntry e : entries) {
       LocalDate entryDate = e.startTime().toLocalDate();
 
@@ -113,18 +132,20 @@ public class ListCommand implements Runnable {
       String duration =
           String.format("%dh %02dm", e.durationMinutes() / 60, e.durationMinutes() % 60);
 
+      String tagText =
+          showTags && !e.tags().isEmpty()
+              ? String.join(", ", e.tags())
+              : showMetaTags && !e.metaTags().isEmpty() ? String.join(", ", e.metaTags()) : "";
+
+      if (showTags || showMetaTags) {
+        System.out.printf("%-" + tagColumnWidth + "s", tagText + " • ");
+      }
+
       if (showIds) {
         System.out.printf("%s • ", e.id());
       }
 
-      System.out.printf("[%s]  %s  • %-12s  • %s", start, duration, e.activityType(), e.note());
-      if (showTags && !e.tags().isEmpty()) {
-        System.out.print("  • Tags: " + String.join(", ", e.tags()));
-      }
-      if (showMetaTags && !e.metaTags().isEmpty()) {
-        System.out.print("  • Meta Tags: " + String.join(", ", e.metaTags()));
-      }
-      System.out.println();
+      System.out.printf("[%s]  %s  • %-12s  • %s%n", start, duration, e.activityType(), e.note());
     }
 
     if (showTags) {
@@ -186,12 +207,15 @@ public class ListCommand implements Runnable {
   }
 
   private boolean filterByDateRange(LocalDate entryDate) {
-    if (from == null && to == null && day == null && !today) {
+    if (from == null && to == null && day == null && !today && !yesterday) {
       return true;
     }
 
     if (today) {
       return entryDate.equals(LocalDate.now());
+    }
+    if (yesterday) {
+      return entryDate.equals(LocalDate.now().minusDays(1));
     }
 
     if (day != null && !entryDate.equals(day)) {
