@@ -25,12 +25,20 @@ public class Ansi {
     this.configManager = configManager;
   }
 
+  public String color256(String text, int code) {
+    return configManager.isColorOutput() ? "\u001B[38;5;" + code + "m" + text + RESET : text;
+  }
+
   public String green(String text) {
     return apply(text, GREEN);
   }
 
   public String red(String text) {
     return apply(text, RED);
+  }
+
+  public String purple(String text) {
+    return apply(text, PURPLE);
   }
 
   public String yellow(String text) {
