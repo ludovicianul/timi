@@ -66,73 +66,48 @@ public class TimelineCommand implements Runnable {
 
   @Override
   public void run() {
-    List<TimeEntry> entries = loadEntriesBetween(from, to);
+    List<TimeEntry> entries = loadEntriesBetween(entryStore, from, to);
     if (entries.isEmpty()) {
       System.out.printf("📭 No entries between %s and %s.%n", from, to);
       return;
     }
 
-    Map<String, Integer> aggregated =
-        switch (viewMode) {
-          case day -> aggregateByDay(entries);
-          case week -> aggregateByWeek(entries);
-          case month -> aggregateByMonth(entries);
-        };
-
-    printBarChart(aggregated);
+    Map<String, Map<String, Integer>> aggregated = aggregate(entries);
+    printStackedBarChart(aggregated);
   }
 
-  private List<TimeEntry> loadEntriesBetween(LocalDate from, LocalDate to) {
-    Set<String> months = new HashSet<>();
-    LocalDate cursor = from.withDayOfMonth(1);
-    while (!cursor.isAfter(to)) {
-      months.add(cursor.toString().substring(0, 7));
-      cursor = cursor.plusMonths(1);
-    }
-    return months.stream()
-        .flatMap(m -> entryStore.loadAllEntries(m).stream())
-        .filter(
-            e -> {
-              LocalDate d = e.startTime().toLocalDate();
-              return !d.isBefore(from) && !d.isAfter(to);
-            })
-        .toList();
-  }
-
-  private Map<String, Integer> aggregateByDay(List<TimeEntry> entries) {
-    return entries.stream()
-        .filter(this::matchesOnlyFilter)
-        .collect(
-            Collectors.groupingBy(
-                e -> e.startTime().toLocalDate().toString(),
-                TreeMap::new,
-                Collectors.summingInt(TimeEntry::durationMinutes)));
-  }
-
-  private Map<String, Integer> aggregateByWeek(List<TimeEntry> entries) {
+  private Map<String, Map<String, Integer>> aggregate(List<TimeEntry> entries) {
     WeekFields wf = WeekFields.ISO;
-    return entries.stream()
-        .filter(this::matchesOnlyFilter)
-        .collect(
-            Collectors.groupingBy(
-                e -> {
-                  LocalDate d = e.startTime().toLocalDate();
-                  return d.getYear()
-                      + "-W"
-                      + String.format("%02d", d.get(wf.weekOfWeekBasedYear()));
-                },
-                TreeMap::new,
-                Collectors.summingInt(TimeEntry::durationMinutes)));
-  }
+    Map<String, Map<String, Integer>> result = new TreeMap<>();
+    for (TimeEntry e : entries) {
+      if (!matchesOnlyFilter(e)) continue;
 
-  private Map<String, Integer> aggregateByMonth(List<TimeEntry> entries) {
-    return entries.stream()
-        .filter(this::matchesOnlyFilter)
-        .collect(
-            Collectors.groupingBy(
-                e -> YearMonth.from(e.startTime()).toString(),
-                TreeMap::new,
-                Collectors.summingInt(TimeEntry::durationMinutes)));
+      String period =
+          switch (viewMode) {
+            case day -> e.startTime().toLocalDate().toString();
+            case week -> {
+              LocalDate d = e.startTime().toLocalDate();
+              yield d.getYear() + "-W" + String.format("%02d", d.get(wf.weekOfWeekBasedYear()));
+            }
+            case month -> YearMonth.from(e.startTime()).toString();
+          };
+
+      result.putIfAbsent(period, new TreeMap<>());
+
+      List<String> groups =
+          switch (groupBy) {
+            case type -> List.of(e.activityType());
+            case tag -> new ArrayList<>(e.tags());
+            case metaTag -> new ArrayList<>(e.metaTags());
+          };
+
+      int share = groups.isEmpty() ? e.durationMinutes() : e.durationMinutes() / groups.size();
+
+      for (String g : groups) {
+        result.get(period).merge(g, share, Integer::sum);
+      }
+    }
+    return result;
   }
 
   private boolean matchesOnlyFilter(TimeEntry entry) {
@@ -144,25 +119,59 @@ public class TimelineCommand implements Runnable {
     };
   }
 
-  private void printBarChart(Map<String, Integer> aggregatedData) {
-    int maxMinutes = aggregatedData.values().stream().max(Integer::compareTo).orElse(1);
+  private void printStackedBarChart(Map<String, Map<String, Integer>> data) {
+    Set<String> keys =
+        data.values().stream()
+            .flatMap(m -> m.keySet().stream())
+            .collect(Collectors.toCollection(TreeSet::new));
+
+    List<Integer> colorCodes =
+        List.of(
+            160, 33, 118, 220, 141, 39, 203, 75, 208, 45, 93, 99, 129, 69, 214, 186, 123, 105, 33,
+            27, 36, 84, 124, 203, 229);
+    Map<String, String> colorMap = new HashMap<>();
+    int colorIndex = 0;
+
+    for (String key : keys) {
+      int code = colorCodes.get(colorIndex % colorCodes.size());
+      colorMap.put(key, ansi.color256("█", code));
+      colorIndex++;
+    }
+
     System.out.println("\n📊 Aggregated Timeline (" + viewMode + ")");
     if (only != null && !only.isBlank()) {
       System.out.printf("🔎 Focus: %s\n", ansi.cyan(only));
     }
     System.out.println("=".repeat(80));
 
-    aggregatedData.forEach(
-        (period, minutes) -> {
-          String bar = "█".repeat(scale(minutes, maxMinutes));
-          String label = (only != null && !only.isBlank()) ? ansi.green(bar) : bar;
-          System.out.printf("%-15s | %s (%s)%n", period, label, formatMinutes(minutes));
-        });
+    int maxMinutes =
+        data.values().stream().flatMap(m -> m.values().stream()).max(Integer::compareTo).orElse(1);
+
+    for (var entry : data.entrySet()) {
+      String period = entry.getKey();
+      Map<String, Integer> values = entry.getValue();
+      int total = values.values().stream().mapToInt(Integer::intValue).sum();
+
+      StringBuilder bar = new StringBuilder();
+      for (var k : values.entrySet()) {
+        int segment = scale(k.getValue(), maxMinutes);
+        bar.append(colorMap.get(k.getKey()).repeat(segment));
+      }
+
+      System.out.printf("%-15s | %s (%s)%n", period, bar.toString(), formatMinutes(total));
+    }
 
     System.out.println("=".repeat(80));
+
+    if (only == null || only.isBlank()) {
+      System.out.println("Legend:");
+      for (String k : keys) {
+        System.out.printf("  %s %s%n", colorMap.get(k), k);
+      }
+    }
   }
 
   private int scale(int value, int maxValue) {
-    return (int) Math.ceil((value / (double) maxValue) * chartWidth);
+    return Math.max(1, (int) Math.ceil((value / (double) maxValue) * chartWidth));
   }
 }
