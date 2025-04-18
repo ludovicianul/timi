@@ -28,7 +28,8 @@ public class SetSettingCommand implements Runnable {
     gitEnabled,
     deepWorkValue,
     focusedWorkValue,
-    colorOutput
+    colorOutput,
+    shortDurationThreshold
   }
 
   @Override
@@ -40,6 +41,11 @@ public class SetSettingCommand implements Runnable {
           setInt(value, v -> configManager.setDeepWorkValue(v), deepWorkValue.name());
       case focusedWorkValue ->
           setInt(value, v -> configManager.setFocusedWorkValue(v), focusedWorkValue.name());
+      case shortDurationThreshold ->
+          setInt(
+              value,
+              v -> configManager.setShortDurationThreshold(v),
+              Settings.shortDurationThreshold.name());
     }
   }
 
