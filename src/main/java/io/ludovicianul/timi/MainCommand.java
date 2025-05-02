@@ -1,10 +1,12 @@
 package io.ludovicianul.timi;
 
+import io.ludovicianul.timi.command.AbortCommand;
 import io.ludovicianul.timi.command.AddCommand;
 import io.ludovicianul.timi.command.AnalyzeCommand;
 import io.ludovicianul.timi.command.AuditCommand;
 import io.ludovicianul.timi.command.BatchCommand;
 import io.ludovicianul.timi.command.ConfigCommand;
+import io.ludovicianul.timi.command.DashboardCommand;
 import io.ludovicianul.timi.command.DeleteCommand;
 import io.ludovicianul.timi.command.EditCommand;
 import io.ludovicianul.timi.command.ExportCommand;
@@ -13,10 +15,17 @@ import io.ludovicianul.timi.command.InfoCommand;
 import io.ludovicianul.timi.command.LastCommand;
 import io.ludovicianul.timi.command.ListCommand;
 import io.ludovicianul.timi.command.NotesCommand;
+import io.ludovicianul.timi.command.PauseCommand;
+import io.ludovicianul.timi.command.ResumeCommand;
 import io.ludovicianul.timi.command.SearchCommand;
+import io.ludovicianul.timi.command.StartCommand;
 import io.ludovicianul.timi.command.StatsCommand;
+import io.ludovicianul.timi.command.StatusCommand;
+import io.ludovicianul.timi.command.StopCommand;
+import io.ludovicianul.timi.command.TemplateCommand;
 import io.ludovicianul.timi.command.TimelineCommand;
 import io.ludovicianul.timi.command.UndoCommand;
+import io.ludovicianul.timi.command.ZenCommand;
 import io.ludovicianul.timi.version.VersionProvider;
 import io.quarkus.picocli.runtime.annotations.TopCommand;
 import org.slf4j.Logger;
@@ -31,8 +40,10 @@ import picocli.CommandLine;
     subcommands = {
       AddCommand.class,
       AuditCommand.class,
+      AbortCommand.class,
       ConfigCommand.class,
       DeleteCommand.class,
+      DashboardCommand.class,
       EditCommand.class,
       LastCommand.class,
       ListCommand.class,
@@ -46,6 +57,13 @@ import picocli.CommandLine;
       ExportCommand.class,
       BatchCommand.class,
       UndoCommand.class,
+      TemplateCommand.class,
+      ZenCommand.class,
+      PauseCommand.class,
+      ResumeCommand.class,
+      StartCommand.class,
+      StopCommand.class,
+      StatusCommand.class,
       AutoComplete.GenerateCompletion.class
     },
     description = "Time unit tracker for daily activities")

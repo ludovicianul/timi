@@ -4,9 +4,12 @@ import static io.ludovicianul.timi.command.config.SetSettingCommand.Settings.col
 import static io.ludovicianul.timi.command.config.SetSettingCommand.Settings.deepWorkValue;
 import static io.ludovicianul.timi.command.config.SetSettingCommand.Settings.focusedWorkValue;
 import static io.ludovicianul.timi.command.config.SetSettingCommand.Settings.gitEnabled;
+import static io.ludovicianul.timi.command.config.SetSettingCommand.Settings.zenStyle;
 
 import io.ludovicianul.timi.config.ConfigManager;
 import jakarta.inject.Inject;
+import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
@@ -25,11 +28,13 @@ public class SetSettingCommand implements Runnable {
   @Inject ConfigManager configManager;
 
   enum Settings {
+    zenStyle,
     gitEnabled,
     deepWorkValue,
     focusedWorkValue,
     colorOutput,
-    shortDurationThreshold
+    shortDurationThreshold,
+    roundSessionMinutes
   }
 
   @Override
@@ -46,10 +51,25 @@ public class SetSettingCommand implements Runnable {
               value,
               v -> configManager.setShortDurationThreshold(v),
               Settings.shortDurationThreshold.name());
+      case zenStyle -> setString(value, v -> configManager.setZenStyle(v), zenStyle.name());
+      case roundSessionMinutes ->
+          setInt(
+              value,
+              v -> configManager.setRoundSessionMinutes(v),
+              Settings.roundSessionMinutes.name());
     }
   }
 
-  private void setBoolean(String value, java.util.function.Consumer<Boolean> setter, String label) {
+  private void setString(String value, Consumer<String> setter, String label) {
+    if (value != null && !value.isBlank()) {
+      setter.accept(value);
+      System.out.printf("✅ %s set to %s%n", label, value);
+    } else {
+      System.err.printf("❌ Invalid value for %s. Cannot be null or empty.%n", label);
+    }
+  }
+
+  private void setBoolean(String value, Consumer<Boolean> setter, String label) {
     if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
       boolean parsed = Boolean.parseBoolean(value);
       setter.accept(parsed);
@@ -59,7 +79,7 @@ public class SetSettingCommand implements Runnable {
     }
   }
 
-  private void setInt(String value, java.util.function.IntConsumer setter, String label) {
+  private void setInt(String value, IntConsumer setter, String label) {
     try {
       int v = Integer.parseInt(value);
       setter.accept(v);

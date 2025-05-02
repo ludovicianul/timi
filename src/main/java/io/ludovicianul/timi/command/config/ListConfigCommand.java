@@ -26,6 +26,8 @@ public class ListConfigCommand implements Runnable {
     System.out.println("  • gitEnabled: " + configManager.isGitEnabled());
     System.out.println("  • deepWorkValue: " + configManager.getDeepWorkValue());
     System.out.println("  • focusedWorkValue: " + configManager.getFocusedWorkValue());
-    System.out.println("  • colorOutput: " + configManager.isColorOutput());
+    System.out.println("  • shortDurationThreshold: " + configManager.getShortDurationThreshold());
+    System.out.println("  • shortDurationThreshold: " + configManager.getShortDurationThreshold());
+    System.out.println("  • roundSessionMinutes: " + configManager.getRoundSessionMinutes());
   }
 }

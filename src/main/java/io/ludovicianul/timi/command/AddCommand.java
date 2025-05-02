@@ -275,7 +275,7 @@ public class AddCommand implements Runnable {
               + " ("
               + entry.activityType()
               + ")");
-      System.out.println("✅ Entry added successfully.");
+      System.out.printf("✅ %s entry added successfully.%n", entry.id());
     } catch (Exception e) {
       System.err.println("❌ Failed to save entry or commit changes: " + e.getMessage());
     }

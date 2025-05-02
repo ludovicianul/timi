@@ -148,6 +148,15 @@ public class ConfigManager {
     save();
   }
 
+  public String getZenStyle() {
+    return config.zenStyle;
+  }
+
+  public void setZenStyle(String zenStyle) {
+    config.zenStyle = zenStyle;
+    save();
+  }
+
   public int getFocusedWorkValue() {
     return config.focusedWorkValue;
   }
@@ -164,6 +173,18 @@ public class ConfigManager {
 
   public boolean isColorOutput() {
     return config.colorOutput;
+  }
+
+  public int getRoundSessionMinutes() {
+    return config.roundSessionMinutes;
+  }
+
+  public void setRoundSessionMinutes(int value) {
+    if (value < 0 || value > 10) {
+      throw new IllegalArgumentException("Round session minutes must be between 0 and 10.");
+    }
+    config.roundSessionMinutes = value;
+    save();
   }
 
   public int getShortDurationThreshold() {
@@ -194,5 +215,7 @@ public class ConfigManager {
     public int deepWorkValue = 2;
     public int focusedWorkValue = 3;
     public int shortDurationThreshold = 10;
+    public int roundSessionMinutes = 0; // 0, 5, 10
+    public String zenStyle = "zen"; // coach, zen, snarky
   }
 }
