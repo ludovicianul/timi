@@ -156,8 +156,10 @@ function _complete_timi() {
   # Edge case: if command line has no space after subcommand, then don't assume this subcommand is selected (remkop/picocli#1468).
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} add" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} audit" ];    then _picocli_timi; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} abort" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} config" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} delete" ];    then _picocli_timi; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} dashboard" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} edit" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} last" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} list" ];    then _picocli_timi; return $?; fi
@@ -171,6 +173,13 @@ function _complete_timi() {
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} export" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} batch" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} undo" ];    then _picocli_timi; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} template" ];    then _picocli_timi; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} zen" ];    then _picocli_timi; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} pause" ];    then _picocli_timi; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} resume" ];    then _picocli_timi; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} start" ];    then _picocli_timi; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} stop" ];    then _picocli_timi; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} status" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} generate-completion" ];    then _picocli_timi; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} config add-tag" ];    then _picocli_timi_config; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} config add-type" ];    then _picocli_timi_config; return $?; fi
@@ -189,77 +198,110 @@ function _complete_timi() {
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} index show" ];    then _picocli_timi_index; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} batch add" ];    then _picocli_timi_batch; return $?; fi
   if [ "${COMP_LINE}" = "${COMP_WORDS[0]} batch delete" ];    then _picocli_timi_batch; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} template save" ];    then _picocli_timi_template; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} template use" ];    then _picocli_timi_template; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} template list" ];    then _picocli_timi_template; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} template delete" ];    then _picocli_timi_template; return $?; fi
+  if [ "${COMP_LINE}" = "${COMP_WORDS[0]} zen report" ];    then _picocli_timi_zen; return $?; fi
 
   # Find the longest sequence of subcommands and call the bash function for that subcommand.
   local cmds0=(add)
   local cmds1=(audit)
-  local cmds2=(config)
-  local cmds3=(delete)
-  local cmds4=(edit)
-  local cmds5=(last)
-  local cmds6=(list)
-  local cmds7=(stats)
-  local cmds8=(notes)
-  local cmds9=(search)
-  local cmds10=(analyze)
-  local cmds11=(info)
-  local cmds12=(index)
-  local cmds13=(timeline)
-  local cmds14=(export)
-  local cmds15=(batch)
-  local cmds16=(undo)
-  local cmds17=(generate-completion)
-  local cmds18=(config add-tag)
-  local cmds19=(config add-type)
-  local cmds20=(config prune)
-  local cmds21=(config remove-type)
-  local cmds22=(config remove-tag)
-  local cmds23=(config show-tags)
-  local cmds24=(config show-types)
-  local cmds25=(config validate)
-  local cmds26=(config list)
-  local cmds27=(config set)
-  local cmds28=(config add-meta-tag)
-  local cmds29=(config show-meta-tags)
-  local cmds30=(index rebuild)
-  local cmds31=(index validate)
-  local cmds32=(index show)
-  local cmds33=(batch add)
-  local cmds34=(batch delete)
+  local cmds2=(abort)
+  local cmds3=(config)
+  local cmds4=(delete)
+  local cmds5=(dashboard)
+  local cmds6=(edit)
+  local cmds7=(last)
+  local cmds8=(list)
+  local cmds9=(stats)
+  local cmds10=(notes)
+  local cmds11=(search)
+  local cmds12=(analyze)
+  local cmds13=(info)
+  local cmds14=(index)
+  local cmds15=(timeline)
+  local cmds16=(export)
+  local cmds17=(batch)
+  local cmds18=(undo)
+  local cmds19=(template)
+  local cmds20=(zen)
+  local cmds21=(pause)
+  local cmds22=(resume)
+  local cmds23=(start)
+  local cmds24=(stop)
+  local cmds25=(status)
+  local cmds26=(generate-completion)
+  local cmds27=(config add-tag)
+  local cmds28=(config add-type)
+  local cmds29=(config prune)
+  local cmds30=(config remove-type)
+  local cmds31=(config remove-tag)
+  local cmds32=(config show-tags)
+  local cmds33=(config show-types)
+  local cmds34=(config validate)
+  local cmds35=(config list)
+  local cmds36=(config set)
+  local cmds37=(config add-meta-tag)
+  local cmds38=(config show-meta-tags)
+  local cmds39=(index rebuild)
+  local cmds40=(index validate)
+  local cmds41=(index show)
+  local cmds42=(batch add)
+  local cmds43=(batch delete)
+  local cmds44=(template save)
+  local cmds45=(template use)
+  local cmds46=(template list)
+  local cmds47=(template delete)
+  local cmds48=(zen report)
 
-  if CompWordsContainsArray "${cmds34[@]}"; then _picocli_timi_batch_delete; return $?; fi
-  if CompWordsContainsArray "${cmds33[@]}"; then _picocli_timi_batch_add; return $?; fi
-  if CompWordsContainsArray "${cmds32[@]}"; then _picocli_timi_index_show; return $?; fi
-  if CompWordsContainsArray "${cmds31[@]}"; then _picocli_timi_index_validate; return $?; fi
-  if CompWordsContainsArray "${cmds30[@]}"; then _picocli_timi_index_rebuild; return $?; fi
-  if CompWordsContainsArray "${cmds29[@]}"; then _picocli_timi_config_showmetatags; return $?; fi
-  if CompWordsContainsArray "${cmds28[@]}"; then _picocli_timi_config_addmetatag; return $?; fi
-  if CompWordsContainsArray "${cmds27[@]}"; then _picocli_timi_config_set; return $?; fi
-  if CompWordsContainsArray "${cmds26[@]}"; then _picocli_timi_config_list; return $?; fi
-  if CompWordsContainsArray "${cmds25[@]}"; then _picocli_timi_config_validate; return $?; fi
-  if CompWordsContainsArray "${cmds24[@]}"; then _picocli_timi_config_showtypes; return $?; fi
-  if CompWordsContainsArray "${cmds23[@]}"; then _picocli_timi_config_showtags; return $?; fi
-  if CompWordsContainsArray "${cmds22[@]}"; then _picocli_timi_config_removetag; return $?; fi
-  if CompWordsContainsArray "${cmds21[@]}"; then _picocli_timi_config_removetype; return $?; fi
-  if CompWordsContainsArray "${cmds20[@]}"; then _picocli_timi_config_prune; return $?; fi
-  if CompWordsContainsArray "${cmds19[@]}"; then _picocli_timi_config_addtype; return $?; fi
-  if CompWordsContainsArray "${cmds18[@]}"; then _picocli_timi_config_addtag; return $?; fi
-  if CompWordsContainsArray "${cmds17[@]}"; then _picocli_timi_generatecompletion; return $?; fi
-  if CompWordsContainsArray "${cmds16[@]}"; then _picocli_timi_undo; return $?; fi
-  if CompWordsContainsArray "${cmds15[@]}"; then _picocli_timi_batch; return $?; fi
-  if CompWordsContainsArray "${cmds14[@]}"; then _picocli_timi_export; return $?; fi
-  if CompWordsContainsArray "${cmds13[@]}"; then _picocli_timi_timeline; return $?; fi
-  if CompWordsContainsArray "${cmds12[@]}"; then _picocli_timi_index; return $?; fi
-  if CompWordsContainsArray "${cmds11[@]}"; then _picocli_timi_info; return $?; fi
-  if CompWordsContainsArray "${cmds10[@]}"; then _picocli_timi_analyze; return $?; fi
-  if CompWordsContainsArray "${cmds9[@]}"; then _picocli_timi_search; return $?; fi
-  if CompWordsContainsArray "${cmds8[@]}"; then _picocli_timi_notes; return $?; fi
-  if CompWordsContainsArray "${cmds7[@]}"; then _picocli_timi_stats; return $?; fi
-  if CompWordsContainsArray "${cmds6[@]}"; then _picocli_timi_list; return $?; fi
-  if CompWordsContainsArray "${cmds5[@]}"; then _picocli_timi_last; return $?; fi
-  if CompWordsContainsArray "${cmds4[@]}"; then _picocli_timi_edit; return $?; fi
-  if CompWordsContainsArray "${cmds3[@]}"; then _picocli_timi_delete; return $?; fi
-  if CompWordsContainsArray "${cmds2[@]}"; then _picocli_timi_config; return $?; fi
+  if CompWordsContainsArray "${cmds48[@]}"; then _picocli_timi_zen_report; return $?; fi
+  if CompWordsContainsArray "${cmds47[@]}"; then _picocli_timi_template_delete; return $?; fi
+  if CompWordsContainsArray "${cmds46[@]}"; then _picocli_timi_template_list; return $?; fi
+  if CompWordsContainsArray "${cmds45[@]}"; then _picocli_timi_template_use; return $?; fi
+  if CompWordsContainsArray "${cmds44[@]}"; then _picocli_timi_template_save; return $?; fi
+  if CompWordsContainsArray "${cmds43[@]}"; then _picocli_timi_batch_delete; return $?; fi
+  if CompWordsContainsArray "${cmds42[@]}"; then _picocli_timi_batch_add; return $?; fi
+  if CompWordsContainsArray "${cmds41[@]}"; then _picocli_timi_index_show; return $?; fi
+  if CompWordsContainsArray "${cmds40[@]}"; then _picocli_timi_index_validate; return $?; fi
+  if CompWordsContainsArray "${cmds39[@]}"; then _picocli_timi_index_rebuild; return $?; fi
+  if CompWordsContainsArray "${cmds38[@]}"; then _picocli_timi_config_showmetatags; return $?; fi
+  if CompWordsContainsArray "${cmds37[@]}"; then _picocli_timi_config_addmetatag; return $?; fi
+  if CompWordsContainsArray "${cmds36[@]}"; then _picocli_timi_config_set; return $?; fi
+  if CompWordsContainsArray "${cmds35[@]}"; then _picocli_timi_config_list; return $?; fi
+  if CompWordsContainsArray "${cmds34[@]}"; then _picocli_timi_config_validate; return $?; fi
+  if CompWordsContainsArray "${cmds33[@]}"; then _picocli_timi_config_showtypes; return $?; fi
+  if CompWordsContainsArray "${cmds32[@]}"; then _picocli_timi_config_showtags; return $?; fi
+  if CompWordsContainsArray "${cmds31[@]}"; then _picocli_timi_config_removetag; return $?; fi
+  if CompWordsContainsArray "${cmds30[@]}"; then _picocli_timi_config_removetype; return $?; fi
+  if CompWordsContainsArray "${cmds29[@]}"; then _picocli_timi_config_prune; return $?; fi
+  if CompWordsContainsArray "${cmds28[@]}"; then _picocli_timi_config_addtype; return $?; fi
+  if CompWordsContainsArray "${cmds27[@]}"; then _picocli_timi_config_addtag; return $?; fi
+  if CompWordsContainsArray "${cmds26[@]}"; then _picocli_timi_generatecompletion; return $?; fi
+  if CompWordsContainsArray "${cmds25[@]}"; then _picocli_timi_status; return $?; fi
+  if CompWordsContainsArray "${cmds24[@]}"; then _picocli_timi_stop; return $?; fi
+  if CompWordsContainsArray "${cmds23[@]}"; then _picocli_timi_start; return $?; fi
+  if CompWordsContainsArray "${cmds22[@]}"; then _picocli_timi_resume; return $?; fi
+  if CompWordsContainsArray "${cmds21[@]}"; then _picocli_timi_pause; return $?; fi
+  if CompWordsContainsArray "${cmds20[@]}"; then _picocli_timi_zen; return $?; fi
+  if CompWordsContainsArray "${cmds19[@]}"; then _picocli_timi_template; return $?; fi
+  if CompWordsContainsArray "${cmds18[@]}"; then _picocli_timi_undo; return $?; fi
+  if CompWordsContainsArray "${cmds17[@]}"; then _picocli_timi_batch; return $?; fi
+  if CompWordsContainsArray "${cmds16[@]}"; then _picocli_timi_export; return $?; fi
+  if CompWordsContainsArray "${cmds15[@]}"; then _picocli_timi_timeline; return $?; fi
+  if CompWordsContainsArray "${cmds14[@]}"; then _picocli_timi_index; return $?; fi
+  if CompWordsContainsArray "${cmds13[@]}"; then _picocli_timi_info; return $?; fi
+  if CompWordsContainsArray "${cmds12[@]}"; then _picocli_timi_analyze; return $?; fi
+  if CompWordsContainsArray "${cmds11[@]}"; then _picocli_timi_search; return $?; fi
+  if CompWordsContainsArray "${cmds10[@]}"; then _picocli_timi_notes; return $?; fi
+  if CompWordsContainsArray "${cmds9[@]}"; then _picocli_timi_stats; return $?; fi
+  if CompWordsContainsArray "${cmds8[@]}"; then _picocli_timi_list; return $?; fi
+  if CompWordsContainsArray "${cmds7[@]}"; then _picocli_timi_last; return $?; fi
+  if CompWordsContainsArray "${cmds6[@]}"; then _picocli_timi_edit; return $?; fi
+  if CompWordsContainsArray "${cmds5[@]}"; then _picocli_timi_dashboard; return $?; fi
+  if CompWordsContainsArray "${cmds4[@]}"; then _picocli_timi_delete; return $?; fi
+  if CompWordsContainsArray "${cmds3[@]}"; then _picocli_timi_config; return $?; fi
+  if CompWordsContainsArray "${cmds2[@]}"; then _picocli_timi_abort; return $?; fi
   if CompWordsContainsArray "${cmds1[@]}"; then _picocli_timi_audit; return $?; fi
   if CompWordsContainsArray "${cmds0[@]}"; then _picocli_timi_add; return $?; fi
 
@@ -272,7 +314,7 @@ function _picocli_timi() {
   # Get completion data
   local curr_word=${COMP_WORDS[COMP_CWORD]}
 
-  local commands="add audit config delete edit last list stats notes search analyze info index timeline export batch undo generate-completion"
+  local commands="add audit abort config delete dashboard edit last list stats notes search analyze info index timeline export batch undo template zen pause resume start stop status generate-completion"
   local flag_opts="-h --help -V --version"
   local arg_opts=""
 
@@ -357,6 +399,24 @@ function _picocli_timi_audit() {
   fi
 }
 
+# Generates completions for the options and subcommands of the `abort` subcommand.
+function _picocli_timi_abort() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+
+  local commands=""
+  local flag_opts="-h --help -V --version"
+  local arg_opts=""
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
 # Generates completions for the options and subcommands of the `config` subcommand.
 function _picocli_timi_config() {
   # Get completion data
@@ -389,6 +449,36 @@ function _picocli_timi_delete() {
 
   case ${prev_word} in
     --id|-i)
+      return
+      ;;
+  esac
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `dashboard` subcommand.
+function _picocli_timi_dashboard() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+  local prev_word=${COMP_WORDS[COMP_CWORD-1]}
+
+  local commands=""
+  local flag_opts="-h --help -V --version"
+  local arg_opts="--day --month"
+
+  type compopt &>/dev/null && compopt +o default
+
+  case ${prev_word} in
+    --day)
+      return
+      ;;
+    --month)
       return
       ;;
   esac
@@ -843,6 +933,156 @@ function _picocli_timi_undo() {
   fi
 }
 
+# Generates completions for the options and subcommands of the `template` subcommand.
+function _picocli_timi_template() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+
+  local commands="save use list delete"
+  local flag_opts="-h --help -V --version"
+  local arg_opts=""
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `zen` subcommand.
+function _picocli_timi_zen() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+  local prev_word=${COMP_WORDS[COMP_CWORD-1]}
+
+  local commands="report"
+  local flag_opts="-h --help -V --version"
+  local arg_opts="--day"
+
+  type compopt &>/dev/null && compopt +o default
+
+  case ${prev_word} in
+    --day)
+      return
+      ;;
+  esac
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `pause` subcommand.
+function _picocli_timi_pause() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+
+  local commands=""
+  local flag_opts="-h --help -V --version"
+  local arg_opts=""
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `resume` subcommand.
+function _picocli_timi_resume() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+
+  local commands=""
+  local flag_opts="-h --help -V --version"
+  local arg_opts=""
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `start` subcommand.
+function _picocli_timi_start() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+  local prev_word=${COMP_WORDS[COMP_CWORD-1]}
+
+  local commands=""
+  local flag_opts="-h --help -V --version"
+  local arg_opts="--type --tags --note"
+
+  type compopt &>/dev/null && compopt +o default
+
+  case ${prev_word} in
+    --type)
+      return
+      ;;
+    --tags)
+      return
+      ;;
+    --note)
+      return
+      ;;
+  esac
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `stop` subcommand.
+function _picocli_timi_stop() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+
+  local commands=""
+  local flag_opts="-h --help -V --version"
+  local arg_opts=""
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `status` subcommand.
+function _picocli_timi_status() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+
+  local commands=""
+  local flag_opts="-h --help -V --version"
+  local arg_opts=""
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
 # Generates completions for the options and subcommands of the `generate-completion` subcommand.
 function _picocli_timi_generatecompletion() {
   # Get completion data
@@ -1067,7 +1307,7 @@ function _picocli_timi_config_set() {
   local commands=""
   local flag_opts="-h --help -V --version"
   local arg_opts=""
-  local key_pos_param_args=("gitEnabled" "deepWorkValue" "focusedWorkValue" "colorOutput") # 0-0 values
+  local key_pos_param_args=("zenStyle" "gitEnabled" "deepWorkValue" "focusedWorkValue" "colorOutput" "shortDurationThreshold" "roundSessionMinutes") # 0-0 values
 
   if [[ "${curr_word}" == -* ]]; then
     COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
@@ -1226,6 +1466,123 @@ function _picocli_timi_batch_delete() {
       return
       ;;
   esac
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `save` subcommand.
+function _picocli_timi_template_save() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+  local prev_word=${COMP_WORDS[COMP_CWORD-1]}
+
+  local commands=""
+  local flag_opts=""
+  local arg_opts="--type --tags --duration --note"
+
+  type compopt &>/dev/null && compopt +o default
+
+  case ${prev_word} in
+    --type)
+      return
+      ;;
+    --tags)
+      return
+      ;;
+    --duration)
+      return
+      ;;
+    --note)
+      return
+      ;;
+  esac
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `use` subcommand.
+function _picocli_timi_template_use() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+  local prev_word=${COMP_WORDS[COMP_CWORD-1]}
+
+  local commands=""
+  local flag_opts=""
+  local arg_opts="--note"
+
+  type compopt &>/dev/null && compopt +o default
+
+  case ${prev_word} in
+    --note)
+      return
+      ;;
+  esac
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `list` subcommand.
+function _picocli_timi_template_list() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+
+  local commands=""
+  local flag_opts=""
+  local arg_opts=""
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `delete` subcommand.
+function _picocli_timi_template_delete() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+
+  local commands=""
+  local flag_opts=""
+  local arg_opts=""
+
+  if [[ "${curr_word}" == -* ]]; then
+    COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
+  else
+    local positionals=""
+    local IFS=$'\n'
+    COMPREPLY=( $(compgen -W "${commands// /$'\n'}${IFS}${positionals}" -- "${curr_word}") )
+  fi
+}
+
+# Generates completions for the options and subcommands of the `report` subcommand.
+function _picocli_timi_zen_report() {
+  # Get completion data
+  local curr_word=${COMP_WORDS[COMP_CWORD]}
+
+  local commands=""
+  local flag_opts=""
+  local arg_opts=""
 
   if [[ "${curr_word}" == -* ]]; then
     COMPREPLY=( $(compgen -W "${flag_opts} ${arg_opts}" -- "${curr_word}") )
