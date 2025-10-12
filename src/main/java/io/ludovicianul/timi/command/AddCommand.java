@@ -3,6 +3,7 @@ package io.ludovicianul.timi.command;
 import static io.ludovicianul.timi.util.Utils.*;
 
 import io.ludovicianul.timi.config.ConfigManager;
+import io.ludovicianul.timi.console.Ansi;
 import io.ludovicianul.timi.git.GitManager;
 import io.ludovicianul.timi.persistence.EntryStore;
 import io.ludovicianul.timi.persistence.TimeEntry;
@@ -11,7 +12,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import picocli.CommandLine;
 
@@ -25,6 +25,7 @@ public class AddCommand implements Runnable {
   @Inject ConfigManager configManager;
   @Inject GitManager gitManager;
   @Inject EntryStore entryStore;
+  @Inject Ansi ansi;
 
   @CommandLine.Option(
       names = {"--start", "-s"},
@@ -162,39 +163,27 @@ public class AddCommand implements Runnable {
       }
 
       if (data.type == null || data.type.trim().isEmpty()) {
-        data.type =
-            promptForString(
-                scanner,
-                String.format("Activity type (options: %s)", configManager.getActivityTypes()),
-                configManager::isNotValidActivity);
+        data.type = promptForTypeFromList(scanner, configManager.getActivityTypes());
       } else {
         System.out.printf("Using provided activity type: %s%n", data.type);
       }
 
       if (this.tags == null) {
-        data.tags =
-            promptForTags(
-                scanner,
-                String.format("Tags (options: %s)", configManager.getTags()),
-                configManager.getTags());
+        data.tags = promptForTags(scanner, "tags", configManager.getTags());
       } else {
         System.out.printf(
             "Using provided tags: %s%n",
             data.tags.isEmpty() ? "<none>" : String.join(",", data.tags));
       }
       if (this.metaTags == null) {
-        data.metaTags =
-            promptForTags(
-                scanner,
-                String.format("Meta tags (options: %s)", configManager.getMetaTags()),
-                configManager.getMetaTags());
+        data.metaTags = promptForTags(scanner, "meta tags", configManager.getMetaTags());
       } else {
         System.out.printf(
             "Using provided meta tags: %s%n",
             data.metaTags.isEmpty() ? "<none>" : String.join(",", data.metaTags));
       }
       if (this.note == null) {
-        data.note = promptForString(scanner, "Note", s -> false);
+        data.note = promptForNote(scanner);
       } else {
         System.out.printf("Using provided note: %s%n", data.note.isEmpty() ? "<empty>" : data.note);
       }
@@ -281,17 +270,6 @@ public class AddCommand implements Runnable {
     }
   }
 
-  private Set<String> parseTags(String tagsInput) {
-    if (tagsInput == null || tagsInput.trim().isEmpty()) {
-      return Collections.emptySet();
-    }
-    return Arrays.stream(tagsInput.split(","))
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .map(String::toLowerCase)
-        .collect(Collectors.toSet());
-  }
-
   private LocalDateTime promptForDateTime(Scanner scanner) {
     while (true) {
       String defaultStr = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
@@ -320,14 +298,34 @@ public class AddCommand implements Runnable {
     }
   }
 
-  private String promptForString(Scanner scanner, String prompt, Predicate<String> validator) {
+  private String promptForTypeFromList(Scanner scanner, Set<String> allowedTypes) {
+    List<String> typeList = new ArrayList<>(allowedTypes);
+    System.out.println("Select activity type:");
+    for (int i = 0; i < typeList.size(); i++) {
+      System.out.printf("  [%s] %s%n", ansi.blue(String.valueOf(i + 1)), typeList.get(i));
+    }
+
     while (true) {
-      System.out.printf("%s [required]: ", prompt);
+      System.out.print(" > ");
+      String input = scanner.nextLine().trim();
+      try {
+        int index = Integer.parseInt(input) - 1;
+        if (index < 0 || index >= typeList.size()) {
+          throw new IndexOutOfBoundsException();
+        }
+        return typeList.get(index);
+      } catch (Exception e) {
+        System.out.printf("❌ Invalid selection. Please choose 1 to %d.%n", typeList.size());
+      }
+    }
+  }
+
+  private String promptForNote(Scanner scanner) {
+    while (true) {
+      System.out.print("Note [required]: ");
       String input = scanner.nextLine().trim();
       if (input.isEmpty()) {
         System.out.println("⚠️ This field is required. Try again.");
-      } else if (validator.test(input)) {
-        System.out.println("⚠️ Invalid input. Try again.");
       } else {
         return input;
       }
@@ -335,20 +333,45 @@ public class AddCommand implements Runnable {
   }
 
   private Set<String> promptForTags(Scanner scanner, String prompt, Set<String> allowedTags) {
+    List<String> tagList = new ArrayList<>(allowedTags);
+    System.out.printf("%nSelect %s (separate numbers with commas):%n", prompt);
+    for (int i = 0; i < tagList.size(); i++) {
+      System.out.printf("  [%s] %s%n", ansi.blue(String.valueOf(i + 1)), tagList.get(i));
+    }
+
+    System.out.print(" > ");
+
     while (true) {
-      System.out.printf("%s [%s]: ", prompt, "<empty>");
       String input = scanner.nextLine().trim();
       if (input.isEmpty()) {
         return Collections.emptySet();
       }
-      Set<String> inputTags = parseTags(input);
-      Set<String> difference = new HashSet<>(inputTags);
-      difference.removeAll(allowedTags);
-      if (difference.isEmpty()) {
-        return inputTags;
-      } else {
-        System.err.printf("❌ Invalid tag(s): '%s'. Allowed: %s%n", difference, allowedTags);
+
+      String[] parts = input.split(",");
+      Set<String> result = new LinkedHashSet<>();
+      boolean valid = true;
+
+      for (String part : parts) {
+        try {
+          int index = Integer.parseInt(part.trim()) - 1;
+          if (index < 0 || index >= tagList.size()) {
+            throw new IndexOutOfBoundsException();
+          }
+          result.add(tagList.get(index));
+        } catch (Exception e) {
+          System.out.printf(
+              "❌ Invalid selection: '%s'. Please choose numbers from 1 to %d.%n",
+              part, tagList.size());
+          valid = false;
+          break;
+        }
       }
+
+      if (valid) {
+        return result;
+      }
+
+      System.out.print("Try again: ");
     }
   }
 }

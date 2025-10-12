@@ -4,6 +4,7 @@ import io.ludovicianul.timi.persistence.EntryStore;
 import io.ludovicianul.timi.persistence.TimeEntry;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.HashSet;
@@ -26,19 +27,28 @@ public class Utils {
     if (dateTimeStr == null || dateTimeStr.trim().isEmpty()) {
       return LocalDateTime.now();
     }
-    DateTimeFormatter[] formatters = {
+
+    String input = dateTimeStr.trim();
+
+    DateTimeFormatter[] fullDateTimeFormatters = {
       DateTimeFormatter.ISO_LOCAL_DATE_TIME,
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
     };
-    for (DateTimeFormatter formatter : formatters) {
+
+    for (DateTimeFormatter formatter : fullDateTimeFormatters) {
       try {
-        return LocalDateTime.parse(dateTimeStr.trim(), formatter);
+        return LocalDateTime.parse(input, formatter);
       } catch (DateTimeParseException e) {
         // try next
       }
     }
-    throw new DateTimeParseException("Invalid date format", dateTimeStr, 0);
+    try {
+      LocalTime time = LocalTime.parse(input, DateTimeFormatter.ofPattern("HH:mm"));
+      return LocalDateTime.of(LocalDate.now(), time);
+    } catch (DateTimeParseException e) {
+      throw new DateTimeParseException("Invalid date/time format", input, 0);
+    }
   }
 
   /**
