@@ -3,6 +3,7 @@ package io.ludovicianul.timi.config;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.ludovicianul.timi.persistence.EntryStore;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import java.io.IOException;
@@ -205,6 +206,7 @@ public class ConfigManager {
     return false;
   }
 
+  @RegisterForReflection
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class ConfigData {
     public Set<String> tags = new HashSet<>();

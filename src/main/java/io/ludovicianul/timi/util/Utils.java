@@ -13,9 +13,6 @@ import java.util.Set;
 
 public class Utils {
 
-  public static final DateTimeFormatter DEFAULT_FORMATTER =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-
   /**
    * Parses a date time string using several supported formats.
    *
