@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.ludovicianul</groupId>
   <artifactId>timi</artifactId>
-  <version>1.0.7-SNAPSHOT</version>
+  <version>1.0.7</version>
   <properties>
     <compiler-plugin.version>3.14.1</compiler-plugin.version>
     <maven.compiler.release>25</maven.compiler.release>
@@ -137,6 +137,6 @@
     <url>https://ludovicianul@github.com/ludovicianul/timi.git</url>
     <connection>scm:git:git@github.com:ludovicianul/timi.git</connection>
     <developerConnection>scm:git:git@github.com:ludovicianul/timi.git</developerConnection>
-    <tag>timi-1.0.0</tag>
+    <tag>timi-1.0.7</tag>
   </scm>
 </project>
