@@ -163,11 +163,10 @@ public class AnalyzeCommand implements Runnable {
         .sorted((a, b) -> Integer.compare(b.getValue().size(), a.getValue().size()))
         .limit(10)
         .forEach(
-            entry -> {
-              System.out.printf(
-                  "%s → %d unique types/tags: %s%n",
-                  entry.getKey(), entry.getValue().size(), String.join(", ", entry.getValue()));
-            });
+            entry ->
+                System.out.printf(
+                    "%s → %d unique types/tags: %s%n",
+                    entry.getKey(), entry.getValue().size(), String.join(", ", entry.getValue())));
   }
 
   private void analyzePeakUsage(List<TimeEntry> entries, String target) {
@@ -193,10 +192,7 @@ public class AnalyzeCommand implements Runnable {
     grouped.entrySet().stream()
         .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
         .limit(10)
-        .forEach(
-            e -> {
-              System.out.printf("%s → %s%n", e.getKey(), formatMinutes(e.getValue()));
-            });
+        .forEach(e -> System.out.printf("%s → %s%n", e.getKey(), formatMinutes(e.getValue())));
   }
 
   private void summarize(List<TimeEntry> entries) {
@@ -312,9 +308,7 @@ public class AnalyzeCommand implements Runnable {
     }
 
     dowTotals.forEach(
-        (dow, minutes) -> {
-          System.out.printf("%s → %s%n", dow, formatMinutes(minutes));
-        });
+        (dow, minutes) -> System.out.printf("%s → %s%n", dow, formatMinutes(minutes)));
   }
 
   private String getWeekKey(LocalDate date) {

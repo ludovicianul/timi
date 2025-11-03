@@ -179,7 +179,7 @@ public class TimelineCommand implements Runnable {
         bar.append(colorMap.get(e.getKey()).repeat(e.getValue()));
       }
 
-      System.out.printf("%-15s | %s (%s)%n", period, bar.toString(), formatMinutes(total));
+      System.out.printf("%-15s | %s (%s)%n", period, bar, formatMinutes(total));
     }
 
     System.out.println("=".repeat(80));

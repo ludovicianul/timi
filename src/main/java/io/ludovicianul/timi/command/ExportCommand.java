@@ -41,14 +41,12 @@ public class ExportCommand implements Runnable {
 
   @CommandLine.Option(
       names = {"--tags", "--tag"},
-      required = false,
       description = "Filter entries that contain the specified tags (semicolon separated)",
       split = ",")
   List<String> tags = List.of();
 
   @CommandLine.Option(
       names = {"--meta-tags", "--meta-tag"},
-      required = false,
       description = "Filter entries that contain the specified meta tags (semicolon separated)",
       split = ",")
   List<String> metaTags = List.of();
